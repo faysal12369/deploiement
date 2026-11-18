@@ -275,9 +275,13 @@ void applyTableChoice(Project pr, Map<String, ({bool structure, bool data})> cho
 /// The summary of a deployment, with what to send: the files, the structure (migrations and chosen tables), the data
 /// (chosen tables), and for each table worth it, its structure and/or its data. Null: cancelled.
 /// [gitBranch]: the GitHub branch of the project ('' when it is not linked).
-Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {String gitBranch = '', Project? project}) {
+/// [parts]: the boxes as they were left before "Simulate with this choice" (18/11/2026: "Données" unticked came back
+/// ticked after the new simulation, and the rows went to the server); all ticked when null.
+Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {String gitBranch = '', Project? project, DeployParts? parts}) {
   final canStructure = r.dbOk, canData = r.dbOk && r.sync.isNotEmpty, canGit = gitBranch.isNotEmpty;
-  var files = true, structure = true, data = true, github = canGit;
+  var files = parts?.files ?? true, structure = parts?.structure ?? true, data = parts?.data ?? true, github = canGit && (parts?.github ?? true);
+  // "Data" unticked: no table sends its data, whatever its own box says (its choice stays in the list for later)
+  bool dataOn() => !canData || data;
   final candidates = project == null ? const <TableCandidate>[] : tableCandidates(project, r);
   final noKeys = {for (final c in candidates) if (c.noKey) c.table};
   ({bool structure, bool data}) current(String table) {
@@ -377,7 +381,7 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(c.table, style: ty.mono(size: 13, weight: FontWeight.w600), overflow: TextOverflow.ellipsis),
                         if (c.hint.isNotEmpty) Text(c.hint, style: ty.small.copyWith(color: c.differs ? ty.p.changed : null)),
-                        ?_rowsText(c, ty, choice[c.table]!.data),
+                        ?_rowsText(c, ty, dataOn() && choice[c.table]!.data),
                       ]),
                     ),
                     SizedBox(
@@ -388,9 +392,9 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
                     ),
                     SizedBox(
                       width: 118,
-                      // a table without a key: its data never goes, "Data" stays unticked
-                      child: CheckLine(tr('Data'), key: ValueKey('deploy-data-${c.table}'), value: !c.noKey && choice[c.table]!.data,
-                          enabled: !c.noKey, onChanged: (v) {
+                      // a table without a key, or "Data" unticked above: its data does not go, "Data" stays unticked
+                      child: CheckLine(tr('Data'), key: ValueKey('deploy-data-${c.table}'), value: !c.noKey && dataOn() && choice[c.table]!.data,
+                          enabled: !c.noKey && dataOn(), onChanged: (v) {
                         set(() => choice[c.table] = (structure: choice[c.table]!.structure, data: v));
                       }),
                     ),
@@ -420,7 +424,8 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
         key: const ValueKey('confirm-deploy'),
         // a part that cannot be deployed (no database, no synced table) stays "chosen": there is nothing to do for it
         onPressed: tablesChanged()
-            ? () => Navigator.pop(ctx, DeployChoice(const DeployParts(), tables: {...choice}))
+            // the boxes as they are: the dialog after the new simulation shows them again
+            ? () => Navigator.pop(ctx, DeployChoice(DeployParts(files: files, structure: structure, data: data, github: canGit && github), tables: {...choice}))
             : (chosen() && !r.upToDate
                 ? () => Navigator.pop(
                     ctx, DeployChoice(DeployParts(files: files, structure: !canStructure || structure, data: !canData || data, github: canGit && github)))

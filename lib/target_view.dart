@@ -69,6 +69,7 @@ class _TargetPageState extends State<TargetPage> {
     }
     // the choice of tables can change in the dialog: then a new simulation with it, and the dialog again
     late DeployParts parts;
+    DeployParts? kept; // the boxes left before "Simulate with this choice": the next dialog shows them as they were
     while (true) {
       if (r!.upToDate && tableCandidates(pr, r).every((c) => !c.differs)) {
         // nothing new (asked 17/11/2026): said plainly, nothing is sent, no backup is made
@@ -76,12 +77,13 @@ class _TargetPageState extends State<TargetPage> {
         await showUpToDate(context, t, r);
         return;
       }
-      final c = await confirmDeploy(context, t, r, project: pr, gitBranch: kGitHub && pr.gitReady ? pr.gitBranch.trim() : '');
+      final c = await confirmDeploy(context, t, r, project: pr, gitBranch: kGitHub && pr.gitReady ? pr.gitBranch.trim() : '', parts: kept);
       if (c == null || !mounted) return;
       if (c.tables == null) {
         parts = c.parts;
         break;
       }
+      kept = c.parts;
       applyTableChoice(pr, c.tables!);
       app.save();
       r = await _simulate();

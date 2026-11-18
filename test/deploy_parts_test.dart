@@ -5,12 +5,16 @@
 // Run: flutter test test/deploy_parts_test.dart   (Apache and MySQL of C:\xampp8 started)
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:deploiement/dialogs.dart';
 import 'package:deploiement/git.dart';
 import 'package:deploiement/models.dart';
 import 'package:deploiement/operations.dart';
 import 'package:deploiement/results.dart';
+import 'package:deploiement/theme.dart';
+import 'package:deploiement/widgets.dart';
 
 const mysqlExe = r'C:\xampp8\mysql\bin\mysql.exe';
 final src = Directory(p.join(Directory.systemTemp.path, 'php-deploy-parts'));
@@ -145,4 +149,61 @@ void main() {
       if (remote.existsSync()) remote.deleteSync(recursive: true);
     }
   }, timeout: const Timeout(Duration(minutes: 5)));
+
+  // 18/11/2026: "Données" unticked, a table's structure ticked → "Simulate with this choice" → the dialog came back with
+  // "Données" ticked again (the parts were not kept) and the rows went to the server. Unticked must send no row.
+  testWidgets('"Data" unticked stays unticked through "Simulate with this choice", whatever the tables say', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 900);
+    addTearDown(tester.view.reset);
+    late BuildContext ctx;
+    await tester.pumpWidget(MaterialApp(theme: buildTheme(Brightness.light), home: Builder(builder: (c) {
+      ctx = c;
+      return const Scaffold();
+    })));
+    Map<String, Map<String, dynamic>> cols(List<String> names) => {for (final n in names) n: {'type': 'int(11)', 'null': false}};
+    final pr = Project.create()
+      ..name = 'shop'
+      ..sync = [SyncTable(table: 'devises', data: true)];
+    Report report() => Report(target: 'serveur', package: 'x.zip', status: {}, plan: {
+          'new': ['cli/import.php'], 'changed': [], 'removed': [], 'total': 10, 'db_ok': true, 'migrations': {'run': []},
+        })
+          ..localStructure = {'devises': cols(['id', 'code']), 'articles': cols(['id', 'code', 'prix'])}
+          ..targetStructure = {'devises': cols(['id', 'code']), 'articles': cols(['id', 'code'])}
+          ..sync = [SyncResult('devises', 3, 1, 0, 0, [], [])];
+    final t = Target(id: 't', name: 'serveur', url: 'http://x');
+    CheckLine box(String key) => tester.widget<CheckLine>(find.byKey(ValueKey(key)));
+
+    // 1. "Data" unticked: the data of each table is unticked too (and cannot be ticked), the choice of the list is kept
+    var result = confirmDeploy(ctx, t, report(), project: pr);
+    await tester.pumpAndSettle();
+    expect((box('deploy-data-devises').value, box('deploy-data-devises').enabled), (true, true));
+    await tester.tap(find.byKey(const ValueKey('part-data')));
+    await tester.pumpAndSettle();
+    expect(box('part-data').value, false);
+    expect((box('deploy-data-devises').value, box('deploy-data-devises').enabled), (false, false), reason: 'no table data ticked next to "Data" unticked');
+
+    // 2. a table's structure ticked: "Simulate with this choice" gives back the parts as they were chosen
+    await tester.tap(find.byKey(const ValueKey('deploy-structure-articles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-deploy')));
+    await tester.pumpAndSettle();
+    var c = (await result)!;
+    expect(c.tables!['devises'], (structure: false, data: true), reason: 'the list keeps its data for the next deployments');
+    expect(c.tables!['articles'], (structure: true, data: false));
+    expect([c.parts.files, c.parts.data], [true, false], reason: 'the parts chosen before the new simulation');
+    applyTableChoice(pr, c.tables!);
+
+    // 3. the dialog after the new simulation: "Data" still unticked, "Deploy" sends no row (deploy() then skips "sync":
+    // step 1 of the test above, with the data of "colors" ticked in the list)
+    result = confirmDeploy(ctx, t, report(), project: pr, parts: c.parts);
+    await tester.pumpAndSettle();
+    expect(box('part-data').value, false);
+    expect(box('deploy-data-devises').value, false);
+    await tester.tap(find.byKey(const ValueKey('confirm-deploy')));
+    await tester.pumpAndSettle();
+    c = (await result)!;
+    expect(c.tables, isNull);
+    expect([c.parts.files, c.parts.structure, c.parts.data], [true, true, false]);
+  });
 }
