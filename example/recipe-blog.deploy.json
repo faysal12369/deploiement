@@ -1,0 +1,79 @@
+{
+  "php_deploy_project": 1,
+  "id": "bb9a9db0dc1a8d36",
+  "name": "Recipe Blog",
+  "folder": "C:\\xampp\\htdocs\\recipe-blog",
+  "exclude": [
+    ".git/",
+    ".idea/",
+    ".vscode/",
+    "node_modules/",
+    "*.log",
+    ".DS_Store",
+    "Thumbs.db",
+    "database/seed.sql"
+  ],
+  "keep": [
+    ".env",
+    "uploads/"
+  ],
+  "migrationsFolder": "database/migrations",
+  "migrationsSkip": "*_rollback.sql",
+  "rerunChangedMigrations": false,
+  "localDb": {
+    "host": "127.0.0.1",
+    "port": "3306",
+    "name": "recipe_blog",
+    "user": "root",
+    "pass": ""
+  },
+  "sync": [
+    {
+      "table": "categories",
+      "key": [
+        "code"
+      ],
+      "where": "",
+      "ignore": [],
+      "links": {},
+      "data": true,
+      "structure": false
+    }
+  ],
+  "targets": [
+    {
+      "id": "8b36de16de8b3d02",
+      "name": "Local test",
+      "url": "http://localhost/recipe-blog-test",
+      "transport": "folder",
+      "host": "",
+      "port": 21,
+      "user": "",
+      "pass": "",
+      "remotePath": "C:\\xampp\\htdocs\\recipe-blog-test",
+      "privateDir": ".deploy",
+      "agentName": "deploy-agent-2a9313a71ec2.php",
+      "token": "",
+      "db": {
+        "host": "localhost",
+        "port": "3306",
+        "name": "",
+        "user": "",
+        "pass": ""
+      },
+      "files": [],
+      "lastAction": "",
+      "cloneOf": ""
+    }
+  ],
+  "compareCountOnly": [
+    "*_log",
+    "*_logs",
+    "*sessions*",
+    "*notifications*",
+    "*login_attempts*"
+  ],
+  "compareKeys": [],
+  "gitRemote": "",
+  "gitBranch": ""
+}

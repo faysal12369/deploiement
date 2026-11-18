@@ -1,0 +1,1803 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;background:#fafafa}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Delta Schéma MariaDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#eef1f4;
+  --surface:#ffffff;
+  --surface-2:#e5e9ee;
+  --surface-3:#f6f8fa;
+  --border:#d3dae1;
+  --border-2:#b4bfca;
+  --text:#16202a;
+  --dim:#586676;
+  --faint:#8b98a6;
+  --accent:#0f6b7e;
+  --accent-2:#0a4d5c;
+  --accent-soft:#dff0f3;
+  --add:#14683f;      --add-soft:#e1f2e8;
+  --drop:#a8253f;     --drop-soft:#fae5ea;
+  --mod:#8a5200;      --mod-soft:#fbefd9;
+  --info:#2a5a8a;     --info-soft:#e4edf7;
+  --code-bg:#f6f8fa;
+  --shadow:0 1px 2px rgba(16,26,38,.07), 0 10px 26px -18px rgba(16,26,38,.45);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161b;
+    --surface:#19212a;
+    --surface-2:#222c36;
+    --surface-3:#1e2731;
+    --border:#2d3946;
+    --border-2:#3e4d5c;
+    --text:#e4eaf1;
+    --dim:#9dabb9;
+    --faint:#6f7e8d;
+    --accent:#3fb3c9;
+    --accent-2:#8ed8e6;
+    --accent-soft:#11333c;
+    --add:#4fc98c;      --add-soft:#10301f;
+    --drop:#f0798f;     --drop-soft:#3a1620;
+    --mod:#e2a44b;      --mod-soft:#33260e;
+    --info:#79b0e6;     --info-soft:#132638;
+    --code-bg:#141c24;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161b;
+  --surface:#19212a;
+  --surface-2:#222c36;
+  --surface-3:#1e2731;
+  --border:#2d3946;
+  --border-2:#3e4d5c;
+  --text:#e4eaf1;
+  --dim:#9dabb9;
+  --faint:#6f7e8d;
+  --accent:#3fb3c9;
+  --accent-2:#8ed8e6;
+  --accent-soft:#11333c;
+  --add:#4fc98c;      --add-soft:#10301f;
+  --drop:#f0798f;     --drop-soft:#3a1620;
+  --mod:#e2a44b;      --mod-soft:#33260e;
+  --info:#79b0e6;     --info-soft:#132638;
+  --code-bg:#141c24;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 56px;padding-left:16px;padding-right:16px}
+
+/* ---------- header ---------- */
+.masthead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;justify-content:space-between;
+  border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:22px}
+.brand{display:flex;gap:12px;align-items:center}
+.glyph{width:38px;height:38px;flex:0 0 38px;border-radius:9px;background:var(--accent);
+  display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-.5px}
+:root[data-theme="dark"] .glyph,
+:root:not([data-theme="light"]) .glyph{color:#0a1a1f}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .glyph{color:#fff}}
+h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.2px}
+.tag{margin:2px 0 0;color:var(--dim);font-size:13px}
+.hd-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---------- generic ---------- */
+.eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--faint)}
+button{font-family:inherit;font-size:13px}
+.btn{border:1px solid var(--border-2);background:var(--surface);color:var(--text);
+  padding:7px 13px;border-radius:7px;cursor:pointer;font-weight:500;transition:background .12s,border-color .12s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+:root[data-theme="dark"] .btn.primary,
+:root:not([data-theme="light"]) .btn.primary{color:#072026}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn.primary{color:#fff}}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--dim);padding:6px 9px}
+.btn.ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,.tab:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
+.btn.sm{padding:4px 9px;font-size:12px}
+
+/* ---------- sources ---------- */
+.sources{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.sources{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--border);border-radius:11px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.pane.drag{border-color:var(--accent);background:var(--accent-soft)}
+.pane-hd{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);
+  background:var(--surface-3);flex-wrap:wrap}
+.pane-hd .side{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.side.old{background:var(--mod)}
+.side.new{background:var(--add)}
+.pane-hd h2{font-size:13.5px;margin:0;font-weight:600;letter-spacing:.01em}
+.pane-hd .sub{font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+.pane-hd .spacer{flex:1}
+textarea{width:100%;min-height:172px;resize:vertical;border:0;background:transparent;color:var(--text);
+  font-family:var(--mono);font-size:12px;line-height:1.55;padding:11px 13px;display:block}
+textarea::placeholder{color:var(--faint)}
+.pane-ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 13px;
+  border-top:1px solid var(--border);background:var(--surface-3);font-size:11.5px;color:var(--dim);min-height:38px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;
+  padding:2px 7px;border-radius:999px;border:1px solid var(--border-2);color:var(--dim);white-space:nowrap}
+.chip.ok{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip.none{border-style:dashed}
+label.file{cursor:pointer}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* ---------- controls ---------- */
+.controls{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:11px;
+  box-shadow:var(--shadow);padding:13px}
+.ctrl-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--faint)}
+select{font-family:var(--mono);font-size:12.5px;padding:7px 9px;border-radius:7px;
+  border:1px solid var(--border-2);background:var(--surface);color:var(--text)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:4px 18px;
+  margin-top:13px;padding-top:12px;border-top:1px dashed var(--border)}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:3px 0;font-size:12.5px;color:var(--dim);cursor:pointer}
+.opt input{margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.opt span b{color:var(--text);font-weight:500}
+.run-row{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
+
+/* ---------- results ---------- */
+.results{margin-top:20px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{border:0;background:transparent;color:var(--dim);padding:9px 13px;cursor:pointer;
+  font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;gap:7px;align-items:center}
+.tab[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.tab .n{font-family:var(--mono);font-size:10.5px;background:var(--surface-2);color:var(--dim);
+  padding:1px 6px;border-radius:999px;font-weight:600}
+.tab[aria-selected=true] .n{background:var(--accent-soft);color:var(--accent)}
+.tab .n.hot{background:var(--drop-soft);color:var(--drop)}
+.pad{padding-top:18px}
+
+.banner{display:flex;gap:10px;align-items:flex-start;padding:10px 13px;border-radius:9px;
+  background:var(--info-soft);border:1px solid color-mix(in srgb,var(--info) 30%,transparent);
+  color:var(--text);font-size:12.5px;margin-bottom:16px}
+.banner .k{font-weight:600;color:var(--info)}
+
+.summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.stat{display:flex;align-items:baseline;gap:7px;padding:7px 12px;border-radius:8px;
+  background:var(--surface);border:1px solid var(--border)}
+.stat b{font-family:var(--mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--dim)}
+.stat.a b{color:var(--add)} .stat.m b{color:var(--mod)} .stat.d b{color:var(--drop)} .stat.i b{color:var(--faint)}
+
+.tbl{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.tbl-hd{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;user-select:none}
+.tbl-hd:hover{background:var(--surface-3)}
+.tbl-hd .name{font-family:var(--mono);font-size:13px;font-weight:600}
+.tbl-hd .meta{margin-left:auto;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+.tbl-hd .caret{color:var(--faint);font-size:11px;width:11px;transition:transform .15s}
+.tbl.open .caret{transform:rotate(90deg)}
+.pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;border-radius:5px;white-space:nowrap}
+.pill.a{background:var(--add-soft);color:var(--add)}
+.pill.m{background:var(--mod-soft);color:var(--mod)}
+.pill.d{background:var(--drop-soft);color:var(--drop)}
+.tbl-body{display:none;border-top:1px solid var(--border);padding:4px 0}
+.tbl.open .tbl-body{display:block}
+.chg{display:grid;grid-template-columns:22px 1fr;gap:9px;padding:6px 13px;font-size:12.5px;align-items:start}
+.chg+.chg{border-top:1px solid color-mix(in srgb,var(--border) 55%,transparent)}
+.chg .op{font-family:var(--mono);font-weight:600;text-align:center;font-size:13px}
+.chg.a .op{color:var(--add)} .chg.d .op{color:var(--drop)} .chg.m .op{color:var(--mod)}
+.chg code{font-family:var(--mono);font-size:12px;background:var(--code-bg);border:1px solid var(--border);
+  padding:1px 5px;border-radius:4px;white-space:pre-wrap;word-break:break-word}
+.chg .arrow{color:var(--faint);padding:0 4px}
+.chg .what{color:var(--dim)}
+.chg .what b{color:var(--text);font-weight:600}
+
+/* ---------- script ---------- */
+.script-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.script-bar .hint{font-size:12px;color:var(--dim)}
+pre.sql{margin:0;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;
+  padding:14px 15px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.65;
+  max-height:62vh;overflow-y:auto;tab-size:2}
+.t-cm{color:var(--faint);font-style:italic}
+.t-kw{color:var(--accent);font-weight:600}
+.t-id{color:var(--text);font-weight:500}
+.t-st{color:var(--add)}
+.t-nb{color:var(--mod)}
+
+/* ---------- warnings ---------- */
+.warn{display:grid;grid-template-columns:4px 1fr;gap:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;overflow:hidden;margin-bottom:8px}
+.warn .stripe{background:var(--faint)}
+.warn.danger .stripe{background:var(--drop)}
+.warn.caution .stripe{background:var(--mod)}
+.warn.note .stripe{background:var(--info)}
+.warn .body{padding:10px 13px}
+.warn .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.warn .lvl{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.warn.danger .lvl{color:var(--drop)} .warn.caution .lvl{color:var(--mod)} .warn.note .lvl{color:var(--info)}
+.warn .where{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.warn p{margin:5px 0 0;font-size:12.5px}
+.warn .fix{margin-top:6px;font-size:12px;color:var(--dim)}
+.warn .fix code,.warn p code{font-family:var(--mono);font-size:11.5px;background:var(--code-bg);
+  border:1px solid var(--border);padding:1px 4px;border-radius:4px}
+
+/* ---------- help ---------- */
+.help{max-width:66ch}
+.help h3{font-size:14px;margin:22px 0 7px;font-weight:600}
+.help h3:first-child{margin-top:0}
+.help p,.help li{font-size:13px;color:var(--dim)}
+.help li{margin-bottom:5px}
+.help code{font-family:var(--mono);font-size:12px;background:var(--code-bg);border:1px solid var(--border);
+  padding:1px 5px;border-radius:4px;color:var(--text)}
+.help ol,.help ul{padding-left:20px;margin:7px 0}
+.help strong{color:var(--text)}
+
+.empty{padding:40px 16px;text-align:center;color:var(--faint);font-size:13px}
+footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--border);
+  color:var(--faint);font-size:11.5px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<script type="text/plain" id="sample-old">
+-- phpMyAdmin SQL Dump
+-- Hôte : localhost:3306
+-- Server version: 10.5.22-MariaDB
+-- Version de PHP : 7.4.33
+
+CREATE TABLE `utilisateurs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `mot_de_passe` varchar(255) NOT NULL,
+  `role` tinyint(4) NOT NULL DEFAULT 1,
+  `cree_le` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `depenses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilisateur_id` int(11) NOT NULL,
+  `libelle` varchar(150) NOT NULL,
+  `montant` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `date_depense` date NOT NULL,
+  `note` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `utilisateur_id` (`utilisateur_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `parametres` (
+  `cle` varchar(60) NOT NULL,
+  `valeur` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`cle`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+ALTER TABLE `depenses`
+  ADD CONSTRAINT `fk_dep_user` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
+</script>
+
+<script type="text/plain" id="sample-new">
+-- phpMyAdmin SQL Dump
+-- Hôte : 127.0.0.1
+-- Server version: 10.4.32-MariaDB
+-- Version de PHP : 7.3.3
+
+CREATE TABLE `utilisateurs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) NOT NULL,
+  `email` varchar(190) NOT NULL,
+  `telephone` varchar(20) DEFAULT NULL,
+  `mot_de_passe` varchar(255) NOT NULL,
+  `role` tinyint(4) NOT NULL DEFAULT 1,
+  `actif` tinyint(1) NOT NULL DEFAULT 1,
+  `cree_le` timestamp NOT NULL DEFAULT current_timestamp(),
+  `maj_le` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_role_actif` (`role`,`actif`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `libelle` varchar(80) NOT NULL,
+  `couleur` char(7) NOT NULL DEFAULT '#0f6b7e',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `libelle` (`libelle`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `depenses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilisateur_id` int(11) NOT NULL,
+  `categorie_id` int(11) DEFAULT NULL,
+  `libelle` varchar(120) NOT NULL,
+  `montant` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `statut` enum('brouillon','validee','payee') NOT NULL DEFAULT 'brouillon',
+  `date_depense` datetime NOT NULL,
+  `note` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `utilisateur_id` (`utilisateur_id`),
+  KEY `categorie_id` (`categorie_id`),
+  KEY `idx_statut_date` (`statut`,`date_depense`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `depenses`
+  ADD CONSTRAINT `fk_dep_user` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_dep_cat` FOREIGN KEY (`categorie_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
+</script>
+
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand">
+      <div class="glyph">Δ</div>
+      <div>
+        <h1>Delta Schéma</h1>
+        <p class="tag">Compare deux exports SQL et écrit le script qui met l'ancienne base au niveau de la nouvelle.</p>
+      </div>
+    </div>
+    <div class="hd-actions">
+      <button class="btn ghost sm" id="btn-theme" type="button" title="Basculer le thème">◐ Thème</button>
+      <button class="btn ghost sm" id="btn-sample" type="button">Recharger l'exemple</button>
+      <button class="btn ghost sm" id="btn-clear" type="button">Vider</button>
+    </div>
+  </header>
+
+  <section class="sources">
+    <div class="pane" id="pane-old">
+      <div class="pane-hd">
+        <i class="side old"></i>
+        <h2>Base ANCIENNE</h2>
+        <span class="sub">— la cible, celle en production</span>
+        <span class="spacer"></span>
+        <label class="btn sm file">Fichier .sql<input type="file" id="file-old" accept=".sql,.txt,text/plain"></label>
+      </div>
+      <textarea id="sql-old" spellcheck="false" placeholder="Colle ici l'export de la base en ligne (structure seule), ou dépose le fichier .sql sur ce panneau."></textarea>
+      <div class="pane-ft" id="ft-old"></div>
+    </div>
+
+    <div class="pane" id="pane-new">
+      <div class="pane-hd">
+        <i class="side new"></i>
+        <h2>Base NOUVELLE</h2>
+        <span class="sub">— la source, celle de dev</span>
+        <span class="spacer"></span>
+        <label class="btn sm file">Fichier .sql<input type="file" id="file-new" accept=".sql,.txt,text/plain"></label>
+      </div>
+      <textarea id="sql-new" spellcheck="false" placeholder="Colle ici l'export de ta base locale (structure seule), ou dépose le fichier .sql sur ce panneau."></textarea>
+      <div class="pane-ft" id="ft-new"></div>
+    </div>
+  </section>
+
+  <section class="controls">
+    <div class="ctrl-row">
+      <div class="field">
+        <label for="target">Serveur cible (l'ancien)</label>
+        <select id="target">
+          <option value="auto">Détection automatique</option>
+          <option value="maria1011">MariaDB 10.11 / 11.x</option>
+          <option value="maria106">MariaDB 10.6</option>
+          <option value="maria105">MariaDB 10.5</option>
+          <option value="maria104">MariaDB 10.4</option>
+          <option value="maria103">MariaDB 10.3</option>
+          <option value="maria102">MariaDB 10.2</option>
+          <option value="maria101">MariaDB 10.0 / 10.1</option>
+          <option value="mysql80">MySQL 8.0</option>
+          <option value="mysql57">MySQL 5.7</option>
+          <option value="mysql56">MySQL 5.6</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="charsetMode">Changement de charset</label>
+        <select id="charsetMode">
+          <option value="default">DEFAULT CHARSET seul (nouvelles colonnes)</option>
+          <option value="convert">CONVERT TO (convertit aussi les données)</option>
+          <option value="skip">Ne pas toucher au charset</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="o-width" checked><span><b>Ignorer la largeur d'affichage</b> — <code>int(11)</code> ≡ <code>int</code></span></label>
+      <label class="opt"><input type="checkbox" id="o-engine" checked><span><b>Comparer le moteur</b> (ENGINE / ROW_FORMAT)</span></label>
+      <label class="opt"><input type="checkbox" id="o-coll" checked><span><b>Comparer les collations</b> déclarées sur les colonnes</span></label>
+      <label class="opt"><input type="checkbox" id="o-comment"><span><b>Comparer les COMMENT</b> des colonnes et tables</span></label>
+      <label class="opt"><input type="checkbox" id="o-drop"><span><b>Inclure les suppressions</b> — DROP TABLE / DROP COLUMN ⚠</span></label>
+      <label class="opt"><input type="checkbox" id="o-fkoff" checked><span><b>Encadrer par</b> <code>FOREIGN_KEY_CHECKS = 0</code></span></label>
+      <label class="opt"><input type="checkbox" id="o-guard" checked><span><b>Rendre idempotent</b> — <code>IF NOT EXISTS</code> (MariaDB seulement)</span></label>
+      <label class="opt"><input type="checkbox" id="o-views" checked><span><b>Comparer vues, triggers et routines</b></span></label>
+      <label class="opt"><input type="checkbox" id="o-rollback"><span><b>Ajouter le script inverse</b> (retour arrière)</span></label>
+      <label class="opt"><input type="checkbox" id="o-trans"><span><b>Transaction</b> — START TRANSACTION / COMMIT (DDL non transactionnel : indicatif)</span></label>
+    </div>
+
+    <div class="run-row">
+      <button class="btn primary" id="btn-run" type="button">Comparer et générer le script</button>
+      <span class="hint" id="run-note" style="font-size:12px;color:var(--dim)"></span>
+    </div>
+  </section>
+
+  <section class="results">
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-diff" role="tab" aria-selected="true" aria-controls="p-diff" type="button">Différences <span class="n" id="n-diff">0</span></button>
+      <button class="tab" id="tab-sql" role="tab" aria-selected="false" aria-controls="p-sql" type="button">Script SQL <span class="n" id="n-sql">0</span></button>
+      <button class="tab" id="tab-warn" role="tab" aria-selected="false" aria-controls="p-warn" type="button">Avertissements <span class="n" id="n-warn">0</span></button>
+      <button class="tab" id="tab-help" role="tab" aria-selected="false" aria-controls="p-help" type="button">Mode d'emploi</button>
+    </div>
+
+    <div class="pad">
+      <div id="p-diff" role="tabpanel" aria-labelledby="tab-diff"></div>
+
+      <div id="p-sql" role="tabpanel" aria-labelledby="tab-sql" hidden>
+        <div class="script-bar">
+          <button class="btn primary sm" id="btn-copy" type="button">Copier le script</button>
+          <button class="btn sm" id="btn-select" type="button">Tout sélectionner</button>
+          <span class="hint">Colle-le dans phpMyAdmin → onglet <b>SQL</b> de la base ancienne. Fais une sauvegarde avant.</span>
+        </div>
+        <pre class="sql" id="out-sql"></pre>
+      </div>
+
+      <div id="p-warn" role="tabpanel" aria-labelledby="tab-warn" hidden></div>
+
+      <div id="p-help" role="tabpanel" aria-labelledby="tab-help" hidden>
+        <div class="help">
+          <h3>1. Sortir les deux exports</h3>
+          <p><strong>Ancienne base (Hostinger)</strong> : hPanel → Bases de données → phpMyAdmin → choisis la base → onglet <b>Exporter</b> → méthode <b>Personnalisée</b> → dans « Données », coche <code>Structure seule</code> → Exécuter.</p>
+          <p><strong>Nouvelle base (XAMPP)</strong> : <code>http://localhost/phpmyadmin</code>, même chemin. En ligne de commande : <code>mysqldump -u root --no-data --skip-add-drop-table ma_base &gt; new.sql</code></p>
+          <p>Structure seule = fichier léger et diff propre. Les <code>INSERT</code> sont de toute façon ignorés par l'outil.</p>
+
+          <h3>2. Versions : ce qu'il faut savoir</h3>
+          <p><strong>MariaDB 7.4 n'existe pas</strong> — le 7.4 d'Hostinger, c'est la version de <b>PHP</b>. Leurs serveurs MySQL tournent sous MariaDB 10.x. L'outil lit la vraie version dans l'en-tête du dump (<code>-- Server version: …</code>) et l'affiche sous chaque panneau. Si l'en-tête manque, force la cible dans le menu déroulant.</p>
+          <p>Le sens de la migration compte : générer depuis MariaDB 10.4 (XAMPP) vers du 10.5/10.6 ne pose aucun souci. L'inverse — descendre vers plus ancien, ou vers MySQL 5.7 — peut casser sur <code>DEFAULT (expression)</code>, les contraintes <code>CHECK</code>, le type <code>JSON</code> ou les collations <code>utf8mb4_0900_*</code>. Ces cas sont réécrits automatiquement et listés dans les avertissements.</p>
+
+          <h3>3. Lire le résultat</h3>
+          <ul>
+            <li><b>Différences</b> — table par table : colonnes ajoutées, modifiées, supprimées, index, clés étrangères, options.</li>
+            <li><b>Script SQL</b> — les <code>CREATE</code> et <code>ALTER</code> dans l'ordre sûr : tables d'abord, colonnes, index, puis clés étrangères.</li>
+            <li><b>Avertissements</b> — perte de données possible, <code>NOT NULL</code> sans valeur par défaut, index trop longs en utf8mb4, incompatibilités de version.</li>
+          </ul>
+
+          <h3>4. Avant d'exécuter</h3>
+          <ol>
+            <li>Sauvegarde complète de l'ancienne base (export avec les données).</li>
+            <li>Teste le script sur une copie, pas directement en production.</li>
+            <li>Les suppressions sont <b>désactivées par défaut</b> : elles n'apparaissent qu'en commentaire, sauf si tu coches « Inclure les suppressions ».</li>
+            <li>Une colonne <code>NOT NULL</code> ajoutée sans <code>DEFAULT</code> échoue si la table contient déjà des lignes — l'outil te le signale.</li>
+          </ol>
+
+          <h3>5. Limites connues</h3>
+          <ul>
+            <li>Les renommages de colonnes sont vus comme « supprimée + ajoutée ». L'outil propose un <code>CHANGE</code> en commentaire quand le type correspond.</li>
+            <li>Le partitionnement, les tables système et les <code>CREATE TABLE … SELECT</code> ne sont pas analysés (signalés).</li>
+            <li>Tout se passe dans ton navigateur : aucun dump n'est envoyé nulle part.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Analyse locale, dans le navigateur — rien n'est transmis.</span>
+    <span id="foot-stamp"></span>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ═══════════════════ utilitaires ═══════════════════ */
+var $ = function(s,r){ return (r||document).querySelector(s); };
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return c==='&'?'&amp;':c==='<'?'&lt;':'&gt;'; }); }
+function q(n){ return '`' + String(n).replace(/`/g,'``') + '`'; }
+function lc(s){ return String(s||'').toLowerCase(); }
+
+/* ═══════════════════ découpage en instructions ═══════════════════ */
+function skipQuoted(s,i){
+  var qc = s[i], j = i+1;
+  while(j < s.length){
+    var c = s[j];
+    if(c === '\\' && qc !== '`'){ j += 2; continue; }
+    if(c === qc){ if(s[j+1] === qc){ j += 2; continue; } return j+1; }
+    j++;
+  }
+  return j;
+}
+function splitStatements(sql){
+  var out = [], buf = '', delim = ';', i = 0, n = sql.length;
+  while(i < n){
+    var c = sql[i];
+    if((i === 0 || sql[i-1] === '\n') && /^delimiter[ \t]+/i.test(sql.substr(i,12))){
+      var dm = /^delimiter[ \t]+(\S+)[^\n]*\n?/i.exec(sql.slice(i));
+      if(dm){ if(buf.trim()) out.push(buf); buf=''; delim = dm[1]; i += dm[0].length; continue; }
+    }
+    if(c === "'" || c === '"' || c === '`'){ var e = skipQuoted(sql,i); buf += sql.slice(i,e); i = e; continue; }
+    if(c === '-' && sql[i+1] === '-' && (sql[i+2] === ' ' || sql[i+2] === '\t' || sql[i+2] === '\n' || sql[i+2] === '\r' || i+2 >= n)){
+      var k = sql.indexOf('\n', i); i = k < 0 ? n : k+1; buf += ' '; continue;
+    }
+    if(c === '#'){ var k2 = sql.indexOf('\n', i); i = k2 < 0 ? n : k2+1; buf += ' '; continue; }
+    if(c === '/' && sql[i+1] === '*'){ var k3 = sql.indexOf('*/', i+2); i = k3 < 0 ? n : k3+2; buf += ' '; continue; }
+    if(sql.substr(i, delim.length) === delim){ out.push(buf); buf = ''; i += delim.length; continue; }
+    buf += c; i++;
+  }
+  if(buf.trim()) out.push(buf);
+  var res = [];
+  for(var z=0; z<out.length; z++){ var t = out[z].trim(); if(t) res.push(t); }
+  return res;
+}
+function splitTop(s, sep){
+  sep = sep || ',';
+  var out = [], depth = 0, buf = '', i = 0;
+  while(i < s.length){
+    var c = s[i];
+    if(c === "'" || c === '"' || c === '`'){ var e = skipQuoted(s,i); buf += s.slice(i,e); i = e; continue; }
+    if(c === '('){ depth++; buf += c; i++; continue; }
+    if(c === ')'){ depth--; buf += c; i++; continue; }
+    if(c === sep && depth === 0){ out.push(buf); buf=''; i++; continue; }
+    buf += c; i++;
+  }
+  if(buf.trim()) out.push(buf);
+  var r = [];
+  for(var z=0; z<out.length; z++){ var t = out[z].trim(); if(t) r.push(t); }
+  return r;
+}
+function readParen(s){
+  var depth = 0, i = 0;
+  while(i < s.length){
+    var c = s[i];
+    if(c === "'" || c === '"' || c === '`'){ i = skipQuoted(s,i); continue; }
+    if(c === '('){ depth++; }
+    else if(c === ')'){ depth--; if(depth === 0){ i++; break; } }
+    i++;
+  }
+  return [s.slice(0,i), s.slice(i)];
+}
+function readIdent(s){
+  s = s.replace(/^[\s]+/,'');
+  if(s[0] === '`'){
+    var j = 1, name = '';
+    while(j < s.length){
+      if(s[j] === '`'){ if(s[j+1] === '`'){ name += '`'; j += 2; continue; } j++; break; }
+      name += s[j]; j++;
+    }
+    return [name, s.slice(j)];
+  }
+  if(s[0] === '"'){
+    var e = skipQuoted(s,0);
+    return [s.slice(1,e-1).replace(/""/g,'"'), s.slice(e)];
+  }
+  var m = /^([A-Za-z0-9_$-￿]+)/.exec(s);
+  if(!m) return [null, s];
+  return [m[1], s.slice(m[1].length)];
+}
+function readQualified(s){
+  var r = readIdent(s), name = r[0], rest = r[1];
+  if(rest.replace(/^\s+/,'')[0] === '.'){
+    rest = rest.replace(/^\s*\./,'');
+    var r2 = readIdent(rest);
+    return [r2[0], r2[1]];
+  }
+  return [name, rest];
+}
+function readValue(s){
+  s = s.replace(/^\s+/,'');
+  if(s[0] === "'" || s[0] === '"'){ var e = skipQuoted(s,0); return [s.slice(0,e), s.slice(e)]; }
+  if(s[0] === '('){ var p = readParen(s); return [p[0], p[1]]; }
+  var m = /^(current_timestamp|localtimestamp|localtime|now|curdate|curtime|utc_timestamp|utc_date|uuid|current_date|current_time)\s*(\(\s*\d*\s*\))?/i.exec(s);
+  if(m) return [m[0].replace(/\s+/g,''), s.slice(m[0].length)];
+  m = /^(NULL|TRUE|FALSE)\b/i.exec(s); if(m) return [m[1].toUpperCase(), s.slice(m[0].length)];
+  m = /^(b'[01]*'|x'[0-9a-fA-F]*'|0x[0-9a-fA-F]+)/.exec(s); if(m) return [m[1], s.slice(m[0].length)];
+  m = /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?/.exec(s); if(m) return [m[0], s.slice(m[0].length)];
+  m = /^[A-Za-z_][A-Za-z0-9_]*\s*\(/.exec(s);
+  if(m){ var head = m[0].slice(0,-1).trim(); var pp = readParen(s.slice(m[0].length-1)); return [head+pp[0], pp[1]]; }
+  m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s); if(m) return [m[0], s.slice(m[0].length)];
+  return ['', s];
+}
+
+/* ═══════════════════ modèle ═══════════════════ */
+function newTable(name){
+  return { name:name, cols:[], colIx:{}, indexes:[], fks:[], checks:[],
+           opts:{engine:null,charset:null,collate:null,rowFormat:null,comment:null}, raw:'' };
+}
+function addCol(t, col, pos){
+  if(t.colIx[lc(col.name)] !== undefined){
+    t.cols[t.colIx[lc(col.name)]] = col;
+    return;
+  }
+  if(pos === 'first') t.cols.unshift(col);
+  else if(pos && pos.after){
+    var idx = -1;
+    for(var i=0;i<t.cols.length;i++) if(lc(t.cols[i].name) === lc(pos.after)) idx = i;
+    if(idx >= 0) t.cols.splice(idx+1, 0, col); else t.cols.push(col);
+  } else t.cols.push(col);
+  reindex(t);
+}
+function reindex(t){ t.colIx = {}; for(var i=0;i<t.cols.length;i++) t.colIx[lc(t.cols[i].name)] = i; }
+function getCol(t, name){ var i = t.colIx[lc(name)]; return i === undefined ? null : t.cols[i]; }
+
+/* ═══════════════════ analyse d'une colonne ═══════════════════ */
+function parseColumn(def){
+  var r = readIdent(def), name = r[0], rest = (r[1]||'').replace(/^\s+/,'');
+  if(!name) return null;
+  var col = { name:name, type:'', nullable:true, def:null, defImplicit:false, autoInc:false,
+              onUpdate:null, charset:null, collate:null, comment:null, generated:null,
+              inlineKey:null, unsupported:[] };
+  var tm = /^([A-Za-z]+(?:\s+(?:PRECISION|VARYING))?)/i.exec(rest);
+  if(!tm) return null;
+  var type = tm[1].toLowerCase().replace(/\s+/g,' ');
+  rest = rest.slice(tm[0].length).replace(/^\s*/,'');
+  if(rest[0] === '('){ var p = readParen(rest); type += p[0].replace(/\s*,\s*/g, ','); rest = p[1].replace(/^\s*/,''); }
+  var mm;
+  while((mm = /^(unsigned|signed|zerofill)\b/i.exec(rest))){
+    type += ' ' + mm[1].toLowerCase(); rest = rest.slice(mm[0].length).replace(/^\s*/,'');
+  }
+  col.type = type;
+
+  var guard = 0;
+  while(rest.length && guard++ < 60){
+    rest = rest.replace(/^\s+/,'');
+    if(!rest.length) break;
+    var m;
+    if((m = /^character\s+set\s+/i.exec(rest))){ rest = rest.slice(m[0].length); var ci = readIdent(rest); col.charset = lc(ci[0]); rest = ci[1]; continue; }
+    if((m = /^charset\s*=?\s*/i.exec(rest))){ rest = rest.slice(m[0].length); var ci2 = readIdent(rest); col.charset = lc(ci2[0]); rest = ci2[1]; continue; }
+    if((m = /^collate\s*=?\s*/i.exec(rest))){ rest = rest.slice(m[0].length); var co = readIdent(rest); col.collate = lc(co[0]); rest = co[1]; continue; }
+    if((m = /^(generated\s+always\s+)?as\s*(?=\()/i.exec(rest))){
+      rest = rest.slice(m[0].length).replace(/^\s*/,'');
+      var gp = readParen(rest); rest = gp[1].replace(/^\s*/,'');
+      var kind = 'VIRTUAL', km = /^(virtual|stored|persistent)\b/i.exec(rest);
+      if(km){ kind = km[1].toUpperCase() === 'PERSISTENT' ? 'STORED' : km[1].toUpperCase(); rest = rest.slice(km[0].length); }
+      col.generated = { expr: gp[0].slice(1,-1).trim(), kind: kind };
+      continue;
+    }
+    if((m = /^not\s+null\b/i.exec(rest))){ col.nullable = false; rest = rest.slice(m[0].length); continue; }
+    if((m = /^null\b/i.exec(rest))){ col.nullable = true; rest = rest.slice(m[0].length); continue; }
+    if((m = /^default\b/i.exec(rest))){
+      rest = rest.slice(m[0].length);
+      var dv = readValue(rest); col.def = dv[0]; rest = dv[1]; continue;
+    }
+    if((m = /^auto_increment\b/i.exec(rest))){ col.autoInc = true; rest = rest.slice(m[0].length); continue; }
+    if((m = /^on\s+update\b/i.exec(rest))){
+      rest = rest.slice(m[0].length);
+      var uv = readValue(rest); col.onUpdate = uv[0]; rest = uv[1]; continue;
+    }
+    if((m = /^comment\s+/i.exec(rest))){
+      rest = rest.slice(m[0].length).replace(/^\s*/,'');
+      var e = skipQuoted(rest,0); col.comment = rest.slice(1,e-1); rest = rest.slice(e); continue;
+    }
+    if((m = /^primary\s+key\b/i.exec(rest))){ col.inlineKey = 'PRIMARY'; rest = rest.slice(m[0].length); continue; }
+    if((m = /^unique(\s+key)?\b/i.exec(rest))){ col.inlineKey = 'UNIQUE'; rest = rest.slice(m[0].length); continue; }
+    if((m = /^check\s*(?=\()/i.exec(rest))){ rest = rest.slice(m[0].length); var cp = readParen(rest.replace(/^\s*/,'')); col.unsupported.push('CHECK'+cp[0]); rest = cp[1]; continue; }
+    if((m = /^references\b/i.exec(rest))){ rest = rest.slice(m[0].length); var rv = readIdent(rest.replace(/^\s*/,'')); rest = rv[1]; if(rest.replace(/^\s*/,'')[0]==='('){ var rp = readParen(rest.replace(/^\s*/,'')); rest = rp[1]; } continue; }
+    if((m = /^(invisible|visible|compressed(\s*=?\s*\w+)?|column_format\s+\w+|storage\s+\w+|with\s+system\s+versioning|without\s+system\s+versioning|serial\s+default\s+value)\b/i.exec(rest))){
+      col.unsupported.push(m[0].trim().toUpperCase()); rest = rest.slice(m[0].length); continue;
+    }
+    var tok = /^\S+/.exec(rest);
+    rest = rest.slice(tok ? tok[0].length : 1);
+  }
+  if(col.def === null && col.nullable && !col.autoInc && !col.generated){ col.def = 'NULL'; col.defImplicit = true; }
+  return col;
+}
+
+function parseIndexDef(def){
+  var s = def.replace(/^\s+/,''), m, ix = { kind:'INDEX', name:null, parts:[], using:null, comment:null };
+  if((m = /^primary\s+key\b/i.exec(s))){ ix.kind = 'PRIMARY'; ix.name = 'PRIMARY'; s = s.slice(m[0].length); }
+  else if((m = /^unique(\s+(key|index))?\b/i.exec(s))){ ix.kind = 'UNIQUE'; s = s.slice(m[0].length); }
+  else if((m = /^fulltext(\s+(key|index))?\b/i.exec(s))){ ix.kind = 'FULLTEXT'; s = s.slice(m[0].length); }
+  else if((m = /^spatial(\s+(key|index))?\b/i.exec(s))){ ix.kind = 'SPATIAL'; s = s.slice(m[0].length); }
+  else if((m = /^(key|index)\b/i.exec(s))){ ix.kind = 'INDEX'; s = s.slice(m[0].length); }
+  else return null;
+  s = s.replace(/^\s*/,'');
+  if((m = /^using\s+(btree|hash|rtree)\b/i.exec(s))){ ix.using = m[1].toUpperCase(); s = s.slice(m[0].length).replace(/^\s*/,''); }
+  if(s[0] !== '(' && ix.kind !== 'PRIMARY'){ var r = readIdent(s); if(r[0]){ ix.name = r[0]; s = r[1].replace(/^\s*/,''); } }
+  else if(s[0] !== '(' && ix.kind === 'PRIMARY'){ s = s.replace(/^\s*/,''); }
+  if(s[0] !== '('){ return null; }
+  var p = readParen(s); s = p[1];
+  var cols = splitTop(p[0].slice(1,-1));
+  for(var i=0;i<cols.length;i++){
+    var c = cols[i], cm, part = { col:null, len:null, dir:null };
+    var ri = readIdent(c);
+    if(ri[0] === null){ part.col = c.trim(); ix.parts.push(part); continue; }
+    part.col = ri[0];
+    var tail = ri[1].replace(/^\s*/,'');
+    if(tail[0] === '('){ var lp = readParen(tail); part.len = parseInt(lp[0].slice(1,-1),10) || null; tail = lp[1].replace(/^\s*/,''); }
+    if((cm = /^(asc|desc)\b/i.exec(tail))) part.dir = cm[1].toUpperCase();
+    ix.parts.push(part);
+  }
+  if((m = /using\s+(btree|hash|rtree)\b/i.exec(s))) ix.using = m[1].toUpperCase();
+  if((m = /comment\s+('(?:[^'\\]|\\.|'')*')/i.exec(s))) ix.comment = m[1].slice(1,-1);
+  if(!ix.name && ix.kind !== 'PRIMARY' && ix.parts.length) ix.name = ix.parts[0].col;
+  return ix;
+}
+
+function parseFkDef(def){
+  var s = def.replace(/^\s+/,''), m, fk = { name:null, cols:[], refTable:null, refCols:[], onDelete:null, onUpdate:null };
+  if((m = /^constraint\b/i.exec(s))){
+    s = s.slice(m[0].length).replace(/^\s*/,'');
+    if(!/^foreign\s+key\b/i.test(s)){ var r = readIdent(s); fk.name = r[0]; s = r[1].replace(/^\s*/,''); }
+  }
+  if(!(m = /^foreign\s+key\b/i.exec(s))) return null;
+  s = s.slice(m[0].length).replace(/^\s*/,'');
+  if(s[0] !== '('){ var ri = readIdent(s); s = ri[1].replace(/^\s*/,''); }
+  if(s[0] !== '(') return null;
+  var p = readParen(s); s = p[1].replace(/^\s*/,'');
+  var cc = splitTop(p[0].slice(1,-1));
+  for(var i=0;i<cc.length;i++) fk.cols.push(readIdent(cc[i])[0]);
+  if(!(m = /^references\b/i.exec(s))) return null;
+  s = s.slice(m[0].length).replace(/^\s*/,'');
+  var rt = readQualified(s); fk.refTable = rt[0]; s = rt[1].replace(/^\s*/,'');
+  if(s[0] === '('){ var p2 = readParen(s); s = p2[1];
+    var rc = splitTop(p2[0].slice(1,-1));
+    for(var j=0;j<rc.length;j++) fk.refCols.push(readIdent(rc[j])[0]);
+  }
+  if((m = /on\s+delete\s+(restrict|cascade|set\s+null|no\s+action|set\s+default)/i.exec(s))) fk.onDelete = m[1].toUpperCase().replace(/\s+/g,' ');
+  if((m = /on\s+update\s+(restrict|cascade|set\s+null|no\s+action|set\s+default)/i.exec(s))) fk.onUpdate = m[1].toUpperCase().replace(/\s+/g,' ');
+  if(!fk.name) fk.name = '__anon_' + fk.cols.join('_') + '_' + fk.refTable;
+  return fk;
+}
+
+function parseTableOptions(tail, t){
+  var m;
+  if((m = /\bengine\s*=?\s*([A-Za-z_]+)/i.exec(tail))) t.opts.engine = m[1].toUpperCase();
+  if((m = /\b(?:default\s+)?(?:charset|character\s+set)\s*=?\s*([A-Za-z0-9_]+)/i.exec(tail))) t.opts.charset = lc(m[1]);
+  if((m = /\bcollate\s*=?\s*([A-Za-z0-9_]+)/i.exec(tail))) t.opts.collate = lc(m[1]);
+  if((m = /\brow_format\s*=?\s*([A-Za-z_]+)/i.exec(tail))) t.opts.rowFormat = m[1].toUpperCase();
+  if((m = /\bcomment\s*=?\s*('(?:[^'\\]|\\.|'')*')/i.exec(tail))) t.opts.comment = m[1].slice(1,-1);
+}
+
+/* ═══════════════════ analyse du dump ═══════════════════ */
+function parseDump(sql){
+  var db = { tables:{}, order:[], views:{}, routines:{}, notes:[], server:detectServer(sql), stats:{ignored:0} };
+  if(!sql || !sql.trim()) return db;
+  var stmts = splitStatements(sql);
+  for(var i=0;i<stmts.length;i++){
+    var st = stmts[i], head = st.slice(0,220).toUpperCase();
+    try{
+      if(/^\s*CREATE\s+(TEMPORARY\s+)?TABLE\b/i.test(st)) parseCreateTable(st, db);
+      else if(/^\s*CREATE\b/i.test(st) && /\bVIEW\b/.test(head)) parseView(st, db);
+      else if(/^\s*CREATE\b/i.test(st) && /\b(PROCEDURE|FUNCTION|TRIGGER|EVENT)\b/.test(head)) parseRoutine(st, db);
+      else if(/^\s*CREATE\s+(UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?INDEX\b/i.test(st)) parseCreateIndex(st, db);
+      else if(/^\s*ALTER\s+(ONLINE\s+|IGNORE\s+)?TABLE\b/i.test(st)) parseAlterTable(st, db);
+    }catch(e){ db.notes.push('Instruction ignorée (analyse impossible) : ' + st.slice(0,70).replace(/\s+/g,' ') + '…'); }
+  }
+  if(/\bPARTITION\s+BY\b/i.test(sql)) db.notes.push('Le dump contient du partitionnement (PARTITION BY) : non analysé, à reporter manuellement.');
+  return db;
+}
+function detectServer(sql){
+  if(!sql) return null;
+  var head = sql.slice(0, 6000), m;
+  m = /(\d+\.\d+\.\d+)[-\w]*-MariaDB/i.exec(head);
+  if(m) return { family:'mariadb', version:m[1] };
+  m = /(?:Server version|Version du serveur|Serveur version|MySQL Server Version)\s*:?\s*v?([\d]+\.[\d]+(?:\.[\d]+)?)/i.exec(head);
+  if(m) return { family: /maria/i.test(head) ? 'mariadb' : 'mysql', version:m[1] };
+  if(/MariaDB/i.test(head)) return { family:'mariadb', version:null };
+  if(/MySQL/i.test(head)) return { family:'mysql', version:null };
+  return null;
+}
+function parseCreateTable(st, db){
+  var m = /^\s*CREATE\s+(?:TEMPORARY\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?/i.exec(st);
+  var rest = st.slice(m[0].length);
+  var rt = readQualified(rest), name = rt[0]; rest = rt[1].replace(/^\s*/,'');
+  if(!name) return;
+  if(rest[0] !== '('){ db.notes.push('Table ' + name + ' : forme CREATE TABLE … LIKE/SELECT non analysée.'); return; }
+  var p = readParen(rest), body = p[0].slice(1,-1), tail = p[1];
+  var t = newTable(name);
+  parseTableOptions(tail, t);
+  var parts = splitTop(body);
+  for(var i=0;i<parts.length;i++){
+    var d = parts[i];
+    if(/^(primary\s+key|unique(\s+(key|index))?\b|key\b|index\b|fulltext|spatial)/i.test(d)){
+      var ix = parseIndexDef(d); if(ix) t.indexes.push(ix); continue;
+    }
+    if(/^(constraint\b|foreign\s+key\b)/i.test(d)){
+      if(/foreign\s+key/i.test(d)){ var fk = parseFkDef(d); if(fk) t.fks.push(fk); continue; }
+      var cm = /^constraint\s+(?:(`(?:[^`]|``)*`|[A-Za-z0-9_$]+)\s+)?check\s*(?=\()/i.exec(d);
+      if(cm){ var cp = readParen(d.slice(cm[0].length).replace(/^\s*/,''));
+        t.checks.push({ name: cm[1] ? readIdent(cm[1])[0] : null, expr: cp[0].slice(1,-1).trim() }); continue; }
+      continue;
+    }
+    if(/^check\s*\(/i.test(d)){ var cp2 = readParen(d.replace(/^check\s*/i,'')); t.checks.push({name:null, expr:cp2[0].slice(1,-1).trim()}); continue; }
+    var col = parseColumn(d);
+    if(col){
+      addCol(t, col);
+      if(col.inlineKey === 'PRIMARY') t.indexes.push({kind:'PRIMARY',name:'PRIMARY',parts:[{col:col.name,len:null,dir:null}],using:null,comment:null});
+      else if(col.inlineKey === 'UNIQUE') t.indexes.push({kind:'UNIQUE',name:col.name,parts:[{col:col.name,len:null,dir:null}],using:null,comment:null});
+    }
+  }
+  reindex(t);
+  if(!db.tables[lc(name)]) db.order.push(name);
+  db.tables[lc(name)] = t;
+}
+function parseAlterTable(st, db){
+  var m = /^\s*ALTER\s+(?:ONLINE\s+|IGNORE\s+)?TABLE\s+/i.exec(st);
+  var rest = st.slice(m[0].length);
+  var rt = readQualified(rest), name = rt[0]; rest = rt[1];
+  var t = db.tables[lc(name)];
+  if(!t) return;
+  var actions = splitTop(rest);
+  for(var i=0;i<actions.length;i++){
+    var a = actions[i].replace(/^\s+/,''), mm;
+    if((mm = /^add\s+/i.exec(a))){
+      var body = a.slice(mm[0].length).replace(/^\s*/,'');
+      if(/^(constraint\b|foreign\s+key\b)/i.test(body) && /foreign\s+key/i.test(body)){ var fk = parseFkDef(body); if(fk) upsert(t.fks, fk); continue; }
+      if(/^constraint\b/i.test(body) && /check\s*\(/i.test(body)){
+        var cm = /^constraint\s+(?:(`(?:[^`]|``)*`|[A-Za-z0-9_$]+)\s+)?check\s*(?=\()/i.exec(body);
+        if(cm){ var cp = readParen(body.slice(cm[0].length).replace(/^\s*/,'')); t.checks.push({name:cm[1]?readIdent(cm[1])[0]:null, expr:cp[0].slice(1,-1).trim()}); }
+        continue;
+      }
+      if(/^(primary\s+key|unique|key\b|index\b|fulltext|spatial)/i.test(body)){ var ix = parseIndexDef(body); if(ix) upsert(t.indexes, ix); continue; }
+      var cbody = body.replace(/^column\s+/i,'');
+      var col = parseColumn(cbody);
+      if(col){ addCol(t, col, positionOf(cbody)); }
+      continue;
+    }
+    if((mm = /^(modify|change)\s+/i.exec(a))){
+      var isChange = /^change/i.test(mm[1]);
+      var b = a.slice(mm[0].length).replace(/^column\s+/i,'').replace(/^\s*/,'');
+      if(isChange){
+        var oldn = readIdent(b); b = oldn[1].replace(/^\s*/,'');
+        var nc = parseColumn(b);
+        if(nc){
+          var idx = t.colIx[lc(oldn[0])];
+          if(idx !== undefined){ t.cols[idx] = nc; reindex(t); } else addCol(t, nc, positionOf(b));
+        }
+        continue;
+      }
+      var mc = parseColumn(b);
+      if(mc){
+        var ii = t.colIx[lc(mc.name)];
+        if(ii !== undefined){ t.cols[ii] = mc; } else addCol(t, mc, positionOf(b));
+      }
+      continue;
+    }
+    if((mm = /^drop\s+/i.exec(a))){
+      var d = a.slice(mm[0].length).replace(/^\s*/,''), dm;
+      if((dm = /^(primary\s+key)\b/i.exec(d))){ t.indexes = t.indexes.filter(function(x){ return x.kind !== 'PRIMARY'; }); continue; }
+      if((dm = /^foreign\s+key\s+/i.exec(d))){ var fn = readIdent(d.slice(dm[0].length))[0]; t.fks = t.fks.filter(function(x){ return lc(x.name) !== lc(fn); }); continue; }
+      if((dm = /^(index|key)\s+/i.exec(d))){ var inm = readIdent(d.slice(dm[0].length))[0]; t.indexes = t.indexes.filter(function(x){ return lc(x.name) !== lc(inm); }); continue; }
+      if((dm = /^(column\s+)?/i.exec(d))){ var cn = readIdent(d.slice(dm[0].length))[0];
+        if(cn && t.colIx[lc(cn)] !== undefined){ t.cols.splice(t.colIx[lc(cn)],1); reindex(t); } continue; }
+      continue;
+    }
+    if(/^(engine|default\s+charset|charset|character\s+set|collate|row_format|comment)/i.test(a)) parseTableOptions(a, t);
+  }
+}
+function positionOf(s){
+  var m = /\bafter\s+(`(?:[^`]|``)*`|[A-Za-z0-9_$]+)\s*$/i.exec(s);
+  if(m) return { after: readIdent(m[1])[0] };
+  if(/\bfirst\s*$/i.test(s)) return 'first';
+  return null;
+}
+function upsert(arr, item){
+  for(var i=0;i<arr.length;i++) if(lc(arr[i].name) === lc(item.name)){ arr[i] = item; return; }
+  arr.push(item);
+}
+function parseCreateIndex(st, db){
+  var m = /^\s*CREATE\s+(UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?INDEX\s+/i.exec(st);
+  var kind = m[1] ? m[1].trim().toUpperCase() : 'INDEX';
+  var rest = st.slice(m[0].length);
+  var ri = readIdent(rest), name = ri[0]; rest = ri[1].replace(/^\s*/,'');
+  var om = /^on\s+/i.exec(rest); if(!om) return;
+  rest = rest.slice(om[0].length);
+  var rt = readQualified(rest), tname = rt[0]; rest = rt[1].replace(/^\s*/,'');
+  var t = db.tables[lc(tname)]; if(!t) return;
+  var ix = parseIndexDef((kind === 'INDEX' ? 'KEY ' : kind + ' KEY ') + q(name) + ' ' + rest);
+  if(ix) upsert(t.indexes, ix);
+}
+function stripDefiner(s){
+  return s.replace(/\bDEFINER\s*=\s*(`(?:[^`]|``)*`|'(?:[^'\\]|\\.)*'|[A-Za-z0-9_$.@]+)(\s*@\s*(`(?:[^`]|``)*`|'(?:[^'\\]|\\.)*'|[A-Za-z0-9_$.%]+))?\s*/gi, '');
+}
+function parseView(st, db){
+  var body = stripDefiner(st);
+  var m = /\bVIEW\s+/i.exec(body); if(!m) return;
+  var rest = body.slice(m.index + m[0].length);
+  var rv = readQualified(rest), name = rv[0];
+  if(!name) return;
+  db.views[lc(name)] = { name:name, sql: body.replace(/\s+/g,' ').trim(),
+    norm: body.replace(/\s+/g,' ').replace(/`/g,'').trim().toLowerCase() };
+}
+function parseRoutine(st, db){
+  var body = stripDefiner(st);
+  var m = /\b(PROCEDURE|FUNCTION|TRIGGER|EVENT)\s+/i.exec(body); if(!m) return;
+  var kind = m[1].toUpperCase();
+  var rest = body.slice(m.index + m[0].length);
+  var rv = readQualified(rest), name = rv[0];
+  if(!name) return;
+  db.routines[kind + ':' + lc(name)] = { kind:kind, name:name, sql: body.trim(),
+    norm: body.replace(/\s+/g,' ').replace(/`/g,'').trim().toLowerCase() };
+}
+
+/* ═══════════════════ profils serveur ═══════════════════ */
+var TARGETS = {
+  mysql56:  { label:'MySQL 5.6',            fam:'mysql',   v:5.6 },
+  mysql57:  { label:'MySQL 5.7',            fam:'mysql',   v:5.7 },
+  mysql80:  { label:'MySQL 8.0',            fam:'mysql',   v:8.0 },
+  maria101: { label:'MariaDB 10.0 / 10.1',  fam:'mariadb', v:10.1 },
+  maria102: { label:'MariaDB 10.2',         fam:'mariadb', v:10.2 },
+  maria103: { label:'MariaDB 10.3',         fam:'mariadb', v:10.3 },
+  maria104: { label:'MariaDB 10.4',         fam:'mariadb', v:10.4 },
+  maria105: { label:'MariaDB 10.5',         fam:'mariadb', v:10.5 },
+  maria106: { label:'MariaDB 10.6',         fam:'mariadb', v:10.6 },
+  maria1011:{ label:'MariaDB 10.11 / 11.x', fam:'mariadb', v:10.11 }
+};
+function targetKeyFor(server){
+  if(!server) return 'maria104';
+  var v = parseFloat(server.version || '0');
+  if(server.family === 'mysql'){ return v >= 8 ? 'mysql80' : (v >= 5.7 ? 'mysql57' : 'mysql56'); }
+  if(v >= 10.11) return 'maria1011';
+  if(v >= 10.6) return 'maria106';
+  if(v >= 10.5) return 'maria105';
+  if(v >= 10.4) return 'maria104';
+  if(v >= 10.3) return 'maria103';
+  if(v >= 10.2) return 'maria102';
+  if(v > 0) return 'maria101';
+  return 'maria104';
+}
+function caps(key){
+  var t = TARGETS[key] || TARGETS.maria104, maria = t.fam === 'mariadb';
+  return {
+    key:key, label:t.label, fam:t.fam, v:t.v, maria:maria,
+    exprDefault: maria ? t.v >= 10.2 : t.v >= 8.0,
+    textDefault: maria ? t.v >= 10.2 : false,
+    jsonType:    maria ? t.v >= 10.2 : t.v >= 5.7,
+    checkCstr:   maria ? t.v >= 10.2 : t.v >= 8.0,
+    ifExists:    maria,
+    descIndex:   !maria && t.v >= 8.0,
+    invisible:   (!maria && t.v >= 8.0) || (maria && t.v >= 10.3),
+    utf8mb3Name: maria ? t.v >= 10.6 : t.v >= 8.0,
+    generated:   maria ? t.v >= 10.2 : t.v >= 5.7,
+    bigPrefix:   maria ? t.v >= 10.2 : t.v >= 5.7,
+    instantAdd:  maria ? t.v >= 10.3 : t.v >= 8.0,
+    uuidType:    maria && t.v >= 10.7,
+    inetType:    maria && t.v >= 10.10
+  };
+}
+
+/* ═══════════════════ normalisation pour comparaison ═══════════════════ */
+var O = {};
+function normType(t){
+  var s = lc(t).replace(/\s+/g,' ').trim();
+  s = s.replace(/^integer\b/,'int').replace(/^(dec|numeric|fixed)\b/,'decimal')
+       .replace(/^bool(ean)?\b/,'tinyint(1)').replace(/^character varying/,'varchar')
+       .replace(/^double precision/,'double').replace(/^national /,'').replace(/^nvarchar/,'varchar').replace(/^nchar/,'char');
+  if(O.ignoreWidth) s = s.replace(/^(tinyint|smallint|mediumint|int|bigint)\(\d+\)/,'$1');
+  s = s.replace(/^decimal(?!\()/,'decimal(10,0)');
+  s = s.replace(/\s*,\s*/g,',');
+  return s;
+}
+function normCharset(c){ if(!c) return null; c = lc(c); return c === 'utf8' ? 'utf8mb3' : c; }
+function normColl(c){ if(!c) return null; c = lc(c); return c.replace(/^utf8_/,'utf8mb3_'); }
+function normDefault(col){
+  var d = col.def;
+  if(d === null || d === undefined) return col.nullable ? 'NULL' : '<aucun>';
+  var s = String(d).trim();
+  if(/^null$/i.test(s)) return 'NULL';
+  var ts = /^(current_timestamp|localtimestamp|localtime|now)(\((\d*)\))?$/i.exec(s.replace(/\s+/g,''));
+  if(ts) return 'CURRENT_TIMESTAMP' + (ts[3] ? '(' + ts[3] + ')' : '');
+  var t = lc(col.type);
+  if(/^(tinyint|smallint|mediumint|int|integer|bigint|decimal|dec|numeric|float|double|real|bit|bool)/.test(t)){
+    var inner = /^'(.*)'$/.exec(s), v = inner ? inner[1] : s;
+    if(/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(v)) return String(Number(v));
+  }
+  return s;
+}
+function normOnUpdate(v){
+  if(!v) return null;
+  var m = /^(current_timestamp|now)(\((\d*)\))?$/i.exec(String(v).replace(/\s+/g,''));
+  return m ? 'CURRENT_TIMESTAMP' + (m[3] ? '(' + m[3] + ')' : '') : String(v).toUpperCase();
+}
+function normExpr(e){ return String(e||'').replace(/\s+/g,' ').replace(/`/g,'').trim().toLowerCase(); }
+function colSig(col){
+  var p = [normType(col.type), col.nullable ? 'null' : 'notnull', 'd=' + normDefault(col)];
+  if(col.autoInc) p.push('ai');
+  if(col.onUpdate) p.push('ou=' + normOnUpdate(col.onUpdate));
+  if(col.generated) p.push('gen=' + normExpr(col.generated.expr) + '/' + col.generated.kind);
+  if(O.compareColl){
+    if(col.charset) p.push('cs=' + normCharset(col.charset));
+    if(col.collate) p.push('co=' + normColl(col.collate));
+  }
+  if(O.compareComment && col.comment) p.push('cm=' + col.comment);
+  return p.join(' ');
+}
+function ixSig(ix){
+  var parts = [];
+  for(var i=0;i<ix.parts.length;i++){
+    var pp = ix.parts[i];
+    parts.push(lc(pp.col) + (pp.len ? '(' + pp.len + ')' : '') + (pp.dir === 'DESC' ? ' DESC' : ''));
+  }
+  return ix.kind + '(' + parts.join(',') + ')';
+}
+function fkSig(fk){
+  return fk.cols.map(lc).join(',') + '->' + lc(fk.refTable) + '(' + fk.refCols.map(lc).join(',') + ')' +
+    '|d:' + (fk.onDelete || 'RESTRICT') + '|u:' + (fk.onUpdate || 'RESTRICT');
+}
+
+/* ═══════════════════ rendu SQL ═══════════════════ */
+var C = caps('maria104');
+function mapCollation(coll, W, where){
+  if(!coll) return coll;
+  var c = lc(coll);
+  if(/^utf8mb4_0900_/.test(c) && !(C.fam === 'mysql' && C.v >= 8)){
+    W.push(['caution', where, 'Collation <code>' + c + '</code> (MySQL 8) inconnue de ' + C.label + ' : remplacée par <code>utf8mb4_unicode_ci</code>.', '']);
+    return 'utf8mb4_unicode_ci';
+  }
+  if(/^utf8mb4_uca1400/.test(c) && !(C.maria && C.v >= 10.10)){
+    W.push(['caution', where, 'Collation <code>' + c + '</code> (MariaDB 11.4+) inconnue de ' + C.label + ' : remplacée par <code>utf8mb4_unicode_ci</code>.', '']);
+    return 'utf8mb4_unicode_ci';
+  }
+  if(/^utf8mb3_/.test(c) && !C.utf8mb3Name) return c.replace(/^utf8mb3_/,'utf8_');
+  return c;
+}
+function mapCharset(cs, W, where){
+  if(!cs) return cs;
+  var c = lc(cs);
+  if(c === 'utf8mb3' && !C.utf8mb3Name) return 'utf8';
+  return c;
+}
+function mapType(col, W, where){
+  var t = col.type, lt = lc(t);
+  if(/^json\b/.test(lt) && !C.jsonType){
+    W.push(['caution', where, 'Type <code>JSON</code> non géré par ' + C.label + ' : converti en <code>LONGTEXT</code>.', '']);
+    return 'longtext';
+  }
+  if(/^uuid\b/.test(lt) && !C.uuidType){
+    W.push(['caution', where, 'Type <code>UUID</code> (MariaDB 10.7+) non géré par ' + C.label + ' : converti en <code>CHAR(36)</code>.', '']);
+    return 'char(36)';
+  }
+  if(/^inet[46]\b/.test(lt) && !C.inetType){
+    W.push(['caution', where, 'Type <code>' + lt.toUpperCase() + '</code> non géré par ' + C.label + ' : converti en <code>VARCHAR(45)</code>.', '']);
+    return 'varchar(45)';
+  }
+  return t;
+}
+function renderColumn(col, table, W){
+  var where = table + '.' + col.name;
+  var s = q(col.name) + ' ' + mapType(col, W, where);
+  if(col.charset) s += ' CHARACTER SET ' + mapCharset(col.charset, W, where);
+  if(col.collate) s += ' COLLATE ' + mapCollation(col.collate, W, where);
+  if(col.generated){
+    if(!C.generated){ W.push(['danger', where, 'Colonne générée non gérée par ' + C.label + ' : à traiter à la main.', '']); }
+    s += ' GENERATED ALWAYS AS (' + col.generated.expr + ') ' + col.generated.kind;
+    s += col.nullable ? '' : ' NOT NULL';
+    if(col.comment) s += " COMMENT '" + col.comment.replace(/'/g,"''") + "'";
+    return s;
+  }
+  s += col.nullable ? ' NULL' : ' NOT NULL';
+  var lt = lc(col.type), isLob = /^(tiny|medium|long)?(text|blob)\b/.test(lt) || /^json\b/.test(lt) || /^geometry|^point|^polygon/.test(lt);
+  if(col.def !== null && col.def !== undefined){
+    var isExpr = String(col.def)[0] === '(';
+    if(isLob && col.defImplicit){ /* pas de DEFAULT NULL implicite sur un LOB */ }
+    else if(isExpr && !C.exprDefault){
+      W.push(['danger', where, 'Valeur par défaut sous forme d\'expression <code>DEFAULT ' + esc(col.def) + '</code> non gérée par ' + C.label + ' : retirée du script.', 'À remplacer par une valeur littérale ou un trigger.']);
+    }
+    else if(isLob && !col.defImplicit && !C.textDefault){
+      W.push(['danger', where, 'Un <code>DEFAULT</code> sur une colonne TEXT/BLOB/JSON n\'est pas géré par ' + C.label + ' : retiré du script.', '']);
+    }
+    else if(!(isLob && col.defImplicit)){
+      s += ' DEFAULT ' + col.def;
+    }
+  }
+  if(col.onUpdate) s += ' ON UPDATE ' + col.onUpdate;
+  if(col.autoInc) s += ' AUTO_INCREMENT';
+  if(col.comment) s += " COMMENT '" + col.comment.replace(/'/g,"''") + "'";
+  return s;
+}
+function renderIndex(ix, forAlter){
+  var parts = [];
+  for(var i=0;i<ix.parts.length;i++){
+    var p = ix.parts[i];
+    parts.push(q(p.col) + (p.len ? '(' + p.len + ')' : '') + (p.dir === 'DESC' && C.descIndex ? ' DESC' : ''));
+  }
+  var head;
+  if(ix.kind === 'PRIMARY') head = 'PRIMARY KEY';
+  else if(ix.kind === 'UNIQUE') head = 'UNIQUE KEY ' + q(ix.name);
+  else if(ix.kind === 'FULLTEXT') head = 'FULLTEXT KEY ' + q(ix.name);
+  else if(ix.kind === 'SPATIAL') head = 'SPATIAL KEY ' + q(ix.name);
+  else head = 'KEY ' + q(ix.name);
+  var s = head + ' (' + parts.join(',') + ')';
+  if(ix.using && ix.kind !== 'FULLTEXT' && ix.kind !== 'SPATIAL') s += ' USING ' + ix.using;
+  if(ix.comment) s += " COMMENT '" + ix.comment.replace(/'/g,"''") + "'";
+  return s;
+}
+function renderFk(fk){
+  var s = 'CONSTRAINT ' + q(fk.name) + ' FOREIGN KEY (' + fk.cols.map(q).join(',') + ')' +
+          ' REFERENCES ' + q(fk.refTable) + ' (' + fk.refCols.map(q).join(',') + ')';
+  if(fk.onDelete) s += ' ON DELETE ' + fk.onDelete;
+  if(fk.onUpdate) s += ' ON UPDATE ' + fk.onUpdate;
+  return s;
+}
+function renderCreateTable(t, W, withFks){
+  var lines = [];
+  for(var i=0;i<t.cols.length;i++) lines.push('  ' + renderColumn(t.cols[i], t.name, W));
+  var pk = t.indexes.filter(function(x){ return x.kind === 'PRIMARY'; });
+  var others = t.indexes.filter(function(x){ return x.kind !== 'PRIMARY'; });
+  for(var a=0;a<pk.length;a++) lines.push('  ' + renderIndex(pk[a]));
+  for(var b=0;b<others.length;b++) lines.push('  ' + renderIndex(others[b]));
+  if(withFks) for(var c=0;c<t.fks.length;c++) lines.push('  ' + renderFk(t.fks[c]));
+  if(C.checkCstr) for(var d=0;d<t.checks.length;d++)
+    lines.push('  CONSTRAINT ' + (t.checks[d].name ? q(t.checks[d].name) + ' ' : '') + 'CHECK (' + t.checks[d].expr + ')');
+  else if(t.checks.length) W.push(['note', t.name, 'Contraintes <code>CHECK</code> ignorées : non gérées (ou non appliquées) par ' + C.label + '.', '']);
+
+  var opts = [];
+  opts.push('ENGINE=' + (t.opts.engine || 'InnoDB'));
+  if(t.opts.rowFormat) opts.push('ROW_FORMAT=' + t.opts.rowFormat);
+  if(t.opts.charset) opts.push('DEFAULT CHARSET=' + mapCharset(t.opts.charset, W, t.name));
+  if(t.opts.collate) opts.push('COLLATE=' + mapCollation(t.opts.collate, W, t.name));
+  if(t.opts.comment) opts.push("COMMENT='" + t.opts.comment.replace(/'/g,"''") + "'");
+  var ine = O.guard ? 'IF NOT EXISTS ' : '';
+  return 'CREATE TABLE ' + ine + q(t.name) + ' (\n' + lines.join(',\n') + '\n) ' + opts.join(' ') + ';';
+}
+
+/* ═══════════════════ comparaison ═══════════════════ */
+function compare(oldDb, newDb){
+  var W = [], D = { tables:[], counts:{add:0, mod:0, del:0, same:0} };
+  var S = { create:[], alterCols:[], alterIdx:[], alterFk:[], alterOpts:[], drops:[], views:[], rollback:[] };
+
+  var seen = {};
+  for(var i=0;i<newDb.order.length;i++){
+    var name = newDb.order[i], nt = newDb.tables[lc(name)], ot = oldDb.tables[lc(name)];
+    seen[lc(name)] = 1;
+    if(!ot){ D.counts.add++; handleNewTable(nt, D, S, W); continue; }
+    var entry = diffTable(ot, nt, S, W);
+    if(entry.changes.length){ D.counts.mod++; D.tables.push(entry); }
+    else D.counts.same++;
+  }
+  for(var j=0;j<oldDb.order.length;j++){
+    var on = oldDb.order[j];
+    if(seen[lc(on)]) continue;
+    D.counts.del++;
+    var ot2 = oldDb.tables[lc(on)];
+    D.tables.push({ name:on, status:'d', changes:[{op:'-', kind:'table', text:'Table absente de la base nouvelle — ' + ot2.cols.length + ' colonne(s)'}] });
+    S.drops.push({ table:on, sql:'DROP TABLE IF EXISTS ' + q(on) + ';' });
+    W.push(['danger', on, 'La table existe dans l\'ancienne base mais pas dans la nouvelle. Sa suppression détruirait ses données.',
+            O.includeDrops ? 'Le DROP est <b>inclus</b> dans le script — vérifie que la table est bien obsolète.' : 'Le DROP est seulement proposé en commentaire (option « Inclure les suppressions » décochée).']);
+    if(O.rollback) S.rollback.push('-- ' + on + ' : recréation impossible depuis ce dump sans ses données.');
+  }
+  if(O.compareViews) diffViews(oldDb, newDb, D, S, W);
+  return { D:D, S:S, W:W };
+}
+
+function handleNewTable(nt, D, S, W){
+  var chg = [];
+  for(var i=0;i<nt.cols.length;i++) chg.push({op:'+', kind:'col', text:nt.cols[i].name + ' ' + nt.cols[i].type});
+  D.tables.push({ name:nt.name, status:'a', changes:chg.slice(0,40),
+    more: chg.length > 40 ? chg.length - 40 : 0 });
+  S.create.push({ table:nt.name, sql:renderCreateTable(nt, W, false), fks:nt.fks });
+  for(var k=0;k<nt.fks.length;k++){
+    S.alterFk.push({ table:nt.name, sql:'ALTER TABLE ' + q(nt.name) + ' ADD ' + renderFk(nt.fks[k]) + ';' });
+  }
+  if(O.rollback) S.rollback.push('DROP TABLE IF EXISTS ' + q(nt.name) + ';');
+}
+
+function diffTable(ot, nt, S, W){
+  var changes = [], alters = [], alterNotes = [], idxDrop = [], idxAdd = [], idxNotes = [], rb = [];
+  var tq = q(nt.name);
+
+  /* ---- colonnes ---- */
+  var dropped = [], added = [];
+  for(var i=0;i<nt.cols.length;i++){
+    var nc = nt.cols[i], oc = getCol(ot, nc.name);
+    if(!oc){ added.push({ col:nc, idx:i }); continue; }
+    if(colSig(oc) !== colSig(nc)){
+      changes.push({ op:'~', kind:'col', text:nc.name, from:briefCol(oc), to:briefCol(nc) });
+      alters.push('  MODIFY ' + renderColumn(nc, nt.name, W));
+      if(O.rollback) rb.push('  MODIFY ' + renderColumn(oc, ot.name, W));
+      checkNarrowing(ot.name, oc, nc, W);
+    }
+  }
+  for(var j=0;j<ot.cols.length;j++){
+    if(!getCol(nt, ot.cols[j].name)) dropped.push(ot.cols[j]);
+  }
+  for(var a=0;a<added.length;a++){
+    var ac = added[a].col, pos = '';
+    if(added[a].idx === 0) pos = ' FIRST';
+    else pos = ' AFTER ' + q(nt.cols[added[a].idx - 1].name);
+    changes.push({ op:'+', kind:'col', text:ac.name, to:briefCol(ac) });
+    alters.push('  ADD COLUMN ' + ((O.guard && C.ifExists) ? 'IF NOT EXISTS ' : '') + renderColumn(ac, nt.name, W) + pos);
+    if(O.rollback) rb.push('  DROP COLUMN ' + q(ac.name));
+    if(!ac.nullable && (ac.def === null || ac.def === undefined) && !ac.autoInc && !ac.generated){
+      W.push(['danger', ot.name + '.' + ac.name, 'Colonne <code>NOT NULL</code> ajoutée <b>sans valeur par défaut</b>. L\'ALTER échoue (ou remplit de valeurs vides) si la table contient déjà des lignes.',
+              'Ajoute un <code>DEFAULT</code>, ou fais-le en trois temps : ajouter en NULL → remplir avec un UPDATE → passer en NOT NULL.']);
+    }
+    var match = null;
+    for(var d0=0;d0<dropped.length;d0++) if(normType(dropped[d0].type) === normType(ac.type)) match = dropped[d0];
+    if(match){
+      W.push(['note', ot.name, 'Renommage possible : <code>' + esc(match.name) + '</code> → <code>' + esc(ac.name) + '</code> (même type). Détecté comme suppression + ajout.',
+              'Si c\'est bien un renommage, remplace les deux lignes par : <code>ALTER TABLE ' + esc(q(nt.name)) + ' CHANGE ' + esc(q(match.name)) + ' ' + esc(renderColumn(ac, nt.name, [])) + ';</code>']);
+    }
+  }
+  for(var d=0;d<dropped.length;d++){
+    changes.push({ op:'-', kind:'col', text:dropped[d].name, from:briefCol(dropped[d]) });
+    var stmt = '  DROP COLUMN ' + ((O.guard && C.ifExists) ? 'IF EXISTS ' : '') + q(dropped[d].name);
+    if(O.includeDrops){ alters.push(stmt); if(O.rollback) rb.push('  ADD COLUMN ' + renderColumn(dropped[d], ot.name, W)); }
+    else alterNotes.push('-- ALTER TABLE ' + tq + ' ' + stmt.trim() + ';   -- suppression non incluse (option décochée)');
+    W.push([O.includeDrops ? 'danger' : 'caution', ot.name + '.' + dropped[d].name,
+            'Colonne présente dans l\'ancienne base et absente de la nouvelle : la supprimer détruit son contenu.',
+            O.includeDrops ? 'Le <code>DROP COLUMN</code> est <b>inclus</b> dans le script.' : 'Laissée en commentaire dans le script.']);
+  }
+
+  /* ---- index ---- */
+  var oIx = {}, nIx = {};
+  for(var x=0;x<ot.indexes.length;x++) oIx[lc(ot.indexes[x].name || ixSig(ot.indexes[x]))] = ot.indexes[x];
+  for(var y=0;y<nt.indexes.length;y++) nIx[lc(nt.indexes[y].name || ixSig(nt.indexes[y]))] = nt.indexes[y];
+  Object.keys(nIx).forEach(function(k){
+    var ni = nIx[k], oi = oIx[k];
+    if(!oi){
+      changes.push({ op:'+', kind:'index', text:(ni.kind === 'PRIMARY' ? 'PRIMARY KEY' : ni.kind + ' ' + ni.name), to:ixSig(ni) });
+      idxAdd.push('  ADD ' + renderIndex(ni));
+      if(O.rollback) rb.push('  DROP ' + (ni.kind === 'PRIMARY' ? 'PRIMARY KEY' : 'INDEX ' + q(ni.name)));
+      if(ni.kind === 'UNIQUE') W.push(['caution', ot.name, 'Index <code>UNIQUE ' + esc(ni.name) + '</code> ajouté : l\'ALTER échoue si des doublons existent déjà.',
+        'Vérifie avant : <code>SELECT ' + ni.parts.map(function(p){return esc(q(p.col));}).join(',') + ', COUNT(*) c FROM ' + esc(q(ot.name)) + ' GROUP BY 1' + (ni.parts.length>1?',2':'') + ' HAVING c &gt; 1;</code>']);
+      checkIndexLength(nt, ni, W);
+    } else if(ixSig(oi) !== ixSig(ni)){
+      changes.push({ op:'~', kind:'index', text:(ni.name || ni.kind), from:ixSig(oi), to:ixSig(ni) });
+      idxDrop.push('  DROP ' + (oi.kind === 'PRIMARY' ? 'PRIMARY KEY' : 'INDEX ' + q(oi.name)));
+      idxAdd.push('  ADD ' + renderIndex(ni));
+      if(O.rollback){ rb.push('  DROP ' + (ni.kind === 'PRIMARY' ? 'PRIMARY KEY' : 'INDEX ' + q(ni.name))); rb.push('  ADD ' + renderIndex(oi)); }
+      checkIndexLength(nt, ni, W);
+    }
+  });
+  Object.keys(oIx).forEach(function(k){
+    if(nIx[k]) return;
+    var oi = oIx[k];
+    changes.push({ op:'-', kind:'index', text:(oi.kind === 'PRIMARY' ? 'PRIMARY KEY' : oi.kind + ' ' + oi.name), from:ixSig(oi) });
+    var s = '  DROP ' + (oi.kind === 'PRIMARY' ? 'PRIMARY KEY' : 'INDEX ' + ((O.guard && C.ifExists) ? 'IF EXISTS ' : '') + q(oi.name));
+    if(O.includeDrops){ idxDrop.push(s); if(O.rollback) rb.push('  ADD ' + renderIndex(oi)); }
+    else idxNotes.push('-- ALTER TABLE ' + tq + ' ' + s.trim() + ';   -- suppression non incluse');
+  });
+
+  /* ---- clés étrangères ---- */
+  var oFk = {}, nFk = {};
+  for(var f1=0;f1<ot.fks.length;f1++) oFk[lc(ot.fks[f1].name)] = ot.fks[f1];
+  for(var f2=0;f2<nt.fks.length;f2++) nFk[lc(nt.fks[f2].name)] = nt.fks[f2];
+  Object.keys(nFk).forEach(function(k){
+    var nf = nFk[k], of = oFk[k];
+    if(!of){
+      changes.push({ op:'+', kind:'fk', text:nf.name, to:fkSig(nf) });
+      S.alterFk.push({ table:nt.name, sql:'ALTER TABLE ' + tq + ' ADD ' + renderFk(nf) + ';' });
+      W.push(['caution', ot.name, 'Clé étrangère <code>' + esc(nf.name) + '</code> ajoutée vers <code>' + esc(nf.refTable) + '</code> : l\'ALTER échoue si des lignes orphelines existent.',
+        'Vérifie avant : <code>SELECT COUNT(*) FROM ' + esc(q(ot.name)) + ' a LEFT JOIN ' + esc(q(nf.refTable)) + ' b ON a.' + esc(q(nf.cols[0])) + ' = b.' + esc(q(nf.refCols[0] || 'id')) + ' WHERE a.' + esc(q(nf.cols[0])) + ' IS NOT NULL AND b.' + esc(q(nf.refCols[0] || 'id')) + ' IS NULL;</code>']);
+      if(O.rollback) S.rollback.push('ALTER TABLE ' + tq + ' DROP FOREIGN KEY ' + q(nf.name) + ';');
+    } else if(fkSig(of) !== fkSig(nf)){
+      changes.push({ op:'~', kind:'fk', text:nf.name, from:fkSig(of), to:fkSig(nf) });
+      S.alterFk.push({ table:nt.name, sql:'ALTER TABLE ' + tq + ' DROP FOREIGN KEY ' + q(of.name) + ';' });
+      S.alterFk.push({ table:nt.name, sql:'ALTER TABLE ' + tq + ' ADD ' + renderFk(nf) + ';' });
+    }
+  });
+  Object.keys(oFk).forEach(function(k){
+    if(nFk[k]) return;
+    var of = oFk[k];
+    changes.push({ op:'-', kind:'fk', text:of.name, from:fkSig(of) });
+    var s = 'ALTER TABLE ' + tq + ' DROP FOREIGN KEY ' + q(of.name) + ';';
+    S.alterFk.push({ table:nt.name, sql: O.includeDrops ? s : '-- ' + s + '   -- suppression non incluse' });
+  });
+
+  /* ---- options de table ---- */
+  var optAlters = [];
+  if(O.compareEngine){
+    var oe = (ot.opts.engine || 'INNODB').toUpperCase(), ne = (nt.opts.engine || 'INNODB').toUpperCase();
+    if(oe !== ne){
+      changes.push({ op:'~', kind:'opt', text:'ENGINE', from:oe, to:ne });
+      optAlters.push('ENGINE=' + ne);
+    }
+    var orf = ot.opts.rowFormat || null, nrf = nt.opts.rowFormat || null;
+    if(nrf && orf !== nrf){ changes.push({ op:'~', kind:'opt', text:'ROW_FORMAT', from:orf || '(défaut)', to:nrf }); optAlters.push('ROW_FORMAT=' + nrf); }
+  }
+  if(O.charsetMode !== 'skip'){
+    var ocs = normCharset(ot.opts.charset), ncs = normCharset(nt.opts.charset);
+    var ocl = normColl(ot.opts.collate), ncl = normColl(nt.opts.collate);
+    if((ncs && ocs !== ncs) || (ncl && ocl !== ncl)){
+      changes.push({ op:'~', kind:'opt', text:'CHARSET / COLLATE',
+                     from:(ot.opts.charset || '?') + ' / ' + (ot.opts.collate || '?'),
+                     to:(nt.opts.charset || '?') + ' / ' + (nt.opts.collate || '?') });
+      var cs = mapCharset(nt.opts.charset || 'utf8mb4', W, nt.name);
+      var cl = nt.opts.collate ? mapCollation(nt.opts.collate, W, nt.name) : null;
+      if(O.charsetMode === 'convert'){
+        S.alterOpts.push({ table:nt.name, sql:'ALTER TABLE ' + tq + ' CONVERT TO CHARACTER SET ' + cs + (cl ? ' COLLATE ' + cl : '') + ';' });
+        W.push(['caution', ot.name, '<code>CONVERT TO CHARACTER SET ' + esc(cs) + '</code> réécrit toute la table et <b>convertit les données</b>.',
+          'Sur une table volumineuse c\'est long et verrouillant. Vérifie aussi les index : en utf8mb4 une colonne indexée ne peut dépasser 191 caractères si la limite est de 767 octets.']);
+      } else {
+        optAlters.push('DEFAULT CHARACTER SET=' + cs + (cl ? ' COLLATE=' + cl : ''));
+        W.push(['note', ot.name, 'Seul le charset <b>par défaut</b> de la table est changé : les colonnes existantes gardent <code>' + esc(ot.opts.charset || '?') + '</code>.',
+          'Pour convertir aussi les données existantes, choisis « CONVERT TO » dans le menu « Changement de charset ».']);
+      }
+    }
+  }
+  if(O.compareComment){
+    var oc2 = ot.opts.comment || '', nc2 = nt.opts.comment || '';
+    if(oc2 !== nc2){ changes.push({ op:'~', kind:'opt', text:'COMMENT', from:oc2 || '(vide)', to:nc2 || '(vide)' });
+      optAlters.push("COMMENT='" + nc2.replace(/'/g,"''") + "'"); }
+  }
+  if(optAlters.length) S.alterOpts.push({ table:nt.name, sql:'ALTER TABLE ' + tq + ' ' + optAlters.join(', ') + ';' });
+
+  var colSql = alters.length ? 'ALTER TABLE ' + tq + '\n' + alters.join(',\n') + ';' : '';
+  if(alterNotes.length) colSql += (colSql ? '\n' : '') + alterNotes.join('\n');
+  if(colSql) S.alterCols.push({ table:nt.name, sql:colSql });
+
+  var idxAll = idxDrop.concat(idxAdd);
+  var idxSql = idxAll.length ? 'ALTER TABLE ' + tq + '\n' + idxAll.join(',\n') + ';' : '';
+  if(idxNotes.length) idxSql += (idxSql ? '\n' : '') + idxNotes.join('\n');
+  if(idxSql) S.alterIdx.push({ table:nt.name, sql:idxSql });
+  if(O.rollback && rb.length) S.rollback.push('ALTER TABLE ' + tq + '\n' + rb.join(',\n') + ';');
+
+  return { name:nt.name, status:'m', changes:changes };
+}
+
+function briefCol(c){
+  var s = c.type;
+  s += c.nullable ? ' NULL' : ' NOT NULL';
+  if(c.def !== null && c.def !== undefined && !(c.defImplicit && c.nullable)) s += ' DEFAULT ' + c.def;
+  if(c.autoInc) s += ' AUTO_INCREMENT';
+  if(c.onUpdate) s += ' ON UPDATE ' + c.onUpdate;
+  if(c.collate) s += ' COLLATE ' + c.collate;
+  return s;
+}
+var SIZES = { tinyint:1, smallint:2, mediumint:3, int:4, integer:4, bigint:8 };
+function checkNarrowing(tname, oc, nc, W){
+  var ot = normType(oc.type), nt2 = normType(nc.type);
+  var where = tname + '.' + nc.name;
+  var om = /^(var)?(char|binary)\((\d+)\)/.exec(ot), nm = /^(var)?(char|binary)\((\d+)\)/.exec(nt2);
+  if(om && nm && parseInt(nm[3],10) < parseInt(om[3],10))
+    W.push(['danger', where, 'Longueur réduite : <code>' + esc(oc.type) + '</code> → <code>' + esc(nc.type) + '</code>. Les valeurs plus longues seront <b>tronquées</b>.',
+      'Vérifie avant : <code>SELECT COUNT(*) FROM ' + esc(q(tname)) + ' WHERE CHAR_LENGTH(' + esc(q(nc.name)) + ') &gt; ' + nm[3] + ';</code>']);
+  var ob = SIZES[ot.replace(/\(.*/,'').replace(/ .*/,'')], nb = SIZES[nt2.replace(/\(.*/,'').replace(/ .*/,'')];
+  if(ob && nb && nb < ob)
+    W.push(['danger', where, 'Entier plus petit : <code>' + esc(oc.type) + '</code> → <code>' + esc(nc.type) + '</code>. Débordement possible sur les valeurs existantes.', '']);
+  if(/unsigned/.test(ot) !== /unsigned/.test(nt2))
+    W.push(['caution', where, 'Passage signé ⇄ non signé (<code>' + esc(oc.type) + '</code> → <code>' + esc(nc.type) + '</code>).', '']);
+  var od = /^decimal\((\d+),(\d+)\)/.exec(ot), nd = /^decimal\((\d+),(\d+)\)/.exec(nt2);
+  if(od && nd && (parseInt(nd[1],10) - parseInt(nd[2],10)) < (parseInt(od[1],10) - parseInt(od[2],10)))
+    W.push(['danger', where, 'Précision décimale réduite : <code>' + esc(oc.type) + '</code> → <code>' + esc(nc.type) + '</code>.', '']);
+  var cls = function(t){
+    if(/^(var)?char|^(tiny|medium|long)?text|^enum|^set/.test(t)) return 'texte';
+    if(/^(tinyint|smallint|mediumint|int|bigint|decimal|float|double|bit)/.test(t)) return 'nombre';
+    if(/^(date|time|datetime|timestamp|year)/.test(t)) return 'date';
+    if(/blob|binary/.test(t)) return 'binaire';
+    if(/^json/.test(t)) return 'json';
+    return 'autre';
+  };
+  if(cls(ot) !== cls(nt2))
+    W.push(['danger', where, 'Changement de famille de type : <code>' + esc(oc.type) + '</code> (' + cls(ot) + ') → <code>' + esc(nc.type) + '</code> (' + cls(nt2) + '). Conversion implicite, valeurs possiblement perdues.',
+      'Teste la conversion sur une copie avant de l\'appliquer en production.']);
+  if(oc.nullable === true && nc.nullable === false)
+    W.push(['caution', where, 'Colonne qui passe de <code>NULL</code> à <code>NOT NULL</code> : l\'ALTER échoue s\'il reste des valeurs nulles.',
+      'Vérifie avant : <code>SELECT COUNT(*) FROM ' + esc(q(tname)) + ' WHERE ' + esc(q(nc.name)) + ' IS NULL;</code>']);
+}
+var BYTES = { utf8mb4:4, utf8mb3:3, utf8:3, latin1:1, ascii:1, ucs2:2, utf16:2, utf32:4, binary:1 };
+function checkIndexLength(t, ix, W){
+  var total = 0, unknown = false;
+  for(var i=0;i<ix.parts.length;i++){
+    var p = ix.parts[i], col = getCol(t, p.col);
+    if(!col){ unknown = true; continue; }
+    var cs = normCharset(col.charset || t.opts.charset || 'utf8mb4');
+    var per = BYTES[cs] !== undefined ? BYTES[cs] : 4;
+    var m = /^(var)?char\((\d+)\)/.exec(lc(col.type));
+    if(m) total += (p.len ? p.len : parseInt(m[2],10)) * per;
+    else if(/^(tiny|medium|long)?text/.test(lc(col.type))) total += (p.len || 255) * per;
+    else if(/^(tinyint)/.test(lc(col.type))) total += 1;
+    else if(/^(smallint)/.test(lc(col.type))) total += 2;
+    else if(/^(mediumint|int|integer|float|date)/.test(lc(col.type))) total += 4;
+    else if(/^(bigint|double|datetime|timestamp)/.test(lc(col.type))) total += 8;
+    else total += 8;
+  }
+  if(unknown) return;
+  var limit = C.bigPrefix ? 3072 : 767;
+  if(total > limit){
+    W.push(['danger', t.name, 'Index <code>' + esc(ix.name || ix.kind) + '</code> : environ <b>' + total + ' octets</b>, au-delà de la limite de ' + limit + ' octets de ' + C.label + '.',
+      'Réduis la longueur indexée, par exemple <code>' + esc(q(ix.parts[0].col)) + '(191)</code>, ou passe la table en <code>ROW_FORMAT=DYNAMIC</code> (et <code>innodb_large_prefix=ON</code> sur MySQL 5.7).']);
+  } else if(total > 767 && !C.bigPrefix){
+    W.push(['caution', t.name, 'Index <code>' + esc(ix.name || ix.kind) + '</code> : ~' + total + ' octets. Sûr uniquement si le serveur autorise les préfixes longs.', '']);
+  }
+}
+
+function diffViews(oldDb, newDb, D, S, W){
+  Object.keys(newDb.views).forEach(function(k){
+    var nv = newDb.views[k], ov = oldDb.views[k];
+    if(!ov){
+      D.tables.push({ name:nv.name, status:'a', kindLabel:'vue', changes:[{op:'+', kind:'view', text:'Vue absente de l\'ancienne base'}] });
+      S.views.push('DROP VIEW IF EXISTS ' + q(nv.name) + ';\n' + nv.sql + ';');
+    } else if(ov.norm !== nv.norm){
+      D.tables.push({ name:nv.name, status:'m', kindLabel:'vue', changes:[{op:'~', kind:'view', text:'Définition différente'}] });
+      S.views.push('DROP VIEW IF EXISTS ' + q(nv.name) + ';\n' + nv.sql + ';');
+    }
+  });
+  Object.keys(oldDb.views).forEach(function(k){
+    if(newDb.views[k]) return;
+    var ov = oldDb.views[k];
+    D.tables.push({ name:ov.name, status:'d', kindLabel:'vue', changes:[{op:'-', kind:'view', text:'Vue absente de la nouvelle base'}] });
+    S.views.push((O.includeDrops ? '' : '-- ') + 'DROP VIEW IF EXISTS ' + q(ov.name) + ';');
+  });
+  Object.keys(newDb.routines).forEach(function(k){
+    var nr = newDb.routines[k], or_ = oldDb.routines[k];
+    if(!or_ || or_.norm !== nr.norm){
+      D.tables.push({ name:nr.name, status: or_ ? 'm' : 'a', kindLabel:nr.kind.toLowerCase(),
+        changes:[{op: or_ ? '~' : '+', kind:'routine', text: or_ ? 'Définition différente' : 'Absente de l\'ancienne base'}] });
+      S.views.push('DELIMITER $$\nDROP ' + nr.kind + ' IF EXISTS ' + q(nr.name) + '$$\n' + nr.sql + '$$\nDELIMITER ;');
+      W.push(['note', nr.name, nr.kind.toLowerCase() + ' recréée : le <code>DEFINER</code> d\'origine a été retiré, elle sera donc créée au nom du compte qui exécute le script.',
+        'Sur un hébergement mutualisé c\'est généralement ce qu\'il faut.']);
+    }
+  });
+  Object.keys(oldDb.routines).forEach(function(k){
+    if(newDb.routines[k]) return;
+    var or2 = oldDb.routines[k];
+    D.tables.push({ name:or2.name, status:'d', kindLabel:or2.kind.toLowerCase(),
+      changes:[{op:'-', kind:'routine', text:'Absente de la nouvelle base'}] });
+    S.views.push((O.includeDrops ? '' : '-- ') + 'DROP ' + or2.kind + ' IF EXISTS ' + q(or2.name) + ';');
+  });
+}
+
+/* ═══════════════════ assemblage du script ═══════════════════ */
+function topoSort(creates){
+  var byName = {}, i;
+  for(i=0;i<creates.length;i++) byName[lc(creates[i].table)] = creates[i];
+  var out = [], mark = {};
+  function visit(c, stack){
+    var k = lc(c.table);
+    if(mark[k] === 2) return;
+    if(mark[k] === 1) return;
+    mark[k] = 1;
+    for(var j=0;j<(c.fks||[]).length;j++){
+      var dep = byName[lc(c.fks[j].refTable)];
+      if(dep && lc(dep.table) !== k) visit(dep);
+    }
+    mark[k] = 2; out.push(c);
+  }
+  for(i=0;i<creates.length;i++) visit(creates[i]);
+  return out;
+}
+function buildScript(res, oldDb, newDb){
+  var S = res.S, L = [], n = 0;
+  var stamp = new Date().toISOString().slice(0,16).replace('T',' ');
+  var sv = function(s){ return s ? (s.family === 'mariadb' ? 'MariaDB' : 'MySQL') + ' ' + (s.version || '?') : 'version non détectée'; };
+  L.push('-- ════════════════════════════════════════════════════════════════');
+  L.push('-- Script de migration de schéma  —  ANCIENNE ← NOUVELLE');
+  L.push('-- Généré par Delta Schéma le ' + stamp);
+  L.push('--');
+  L.push('-- Base ancienne (cible) : ' + sv(oldDb.server) + '  ·  ' + oldDb.order.length + ' table(s)');
+  L.push('-- Base nouvelle (source) : ' + sv(newDb.server) + '  ·  ' + newDb.order.length + ' table(s)');
+  L.push('-- Syntaxe générée pour : ' + C.label);
+  L.push('-- Suppressions : ' + (O.includeDrops ? 'INCLUSES (DROP actifs)' : 'exclues (proposées en commentaire)'));
+  L.push('--');
+  L.push('-- ⚠  Sauvegarde complète de la base ancienne AVANT d\'exécuter ce script.');
+  L.push('-- ⚠  Teste-le d\'abord sur une copie.');
+  L.push('-- ════════════════════════════════════════════════════════════════');
+  L.push('');
+  L.push('SET NAMES utf8mb4;');
+  L.push("SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';");
+  if(O.fkOff) L.push('SET FOREIGN_KEY_CHECKS = 0;');
+  if(O.transaction) L.push('START TRANSACTION;   -- indicatif : le DDL MySQL/MariaDB ne se rejoue pas en arrière');
+  L.push('');
+
+  var creates = topoSort(S.create);
+  if(creates.length){
+    L.push(sec('1. NOUVELLES TABLES (' + creates.length + ')'));
+    for(var i=0;i<creates.length;i++){ L.push(creates[i].sql); L.push(''); n++; }
+  }
+  if(S.alterCols.length){
+    L.push(sec('2. COLONNES (' + S.alterCols.length + ' table(s))'));
+    for(var j=0;j<S.alterCols.length;j++){ L.push(S.alterCols[j].sql); L.push(''); n++; }
+  }
+  if(S.alterIdx.length){
+    L.push(sec('3. INDEX (' + S.alterIdx.length + ' table(s))'));
+    for(var k=0;k<S.alterIdx.length;k++){ L.push(S.alterIdx[k].sql); L.push(''); n++; }
+  }
+  if(S.alterOpts.length){
+    L.push(sec('4. OPTIONS DE TABLE (moteur, charset, commentaire)'));
+    for(var m=0;m<S.alterOpts.length;m++){ L.push(S.alterOpts[m].sql); n++; }
+    L.push('');
+  }
+  if(S.alterFk.length){
+    L.push(sec('5. CLÉS ÉTRANGÈRES'));
+    for(var p=0;p<S.alterFk.length;p++){ L.push(S.alterFk[p].sql); n++; }
+    L.push('');
+  }
+  if(O.compareViews && S.views.length){
+    L.push(sec('6. VUES, TRIGGERS ET ROUTINES'));
+    for(var v=0;v<S.views.length;v++){ L.push(S.views[v]); L.push(''); n++; }
+  }
+  if(S.drops.length){
+    L.push(sec('7. TABLES SUPPRIMÉES  ' + (O.includeDrops ? '⚠ ACTIVES' : '(commentées — coche « Inclure les suppressions » pour les activer)')));
+    for(var d=0;d<S.drops.length;d++){ L.push((O.includeDrops ? '' : '-- ') + S.drops[d].sql); if(O.includeDrops) n++; }
+    L.push('');
+  }
+
+  if(O.transaction) L.push('COMMIT;');
+  if(O.fkOff) L.push('SET FOREIGN_KEY_CHECKS = 1;');
+  L.push('');
+  L.push('-- Fin du script — ' + n + ' instruction(s).');
+
+  if(O.rollback && S.rollback.length){
+    L.push('');
+    L.push(sec('RETOUR ARRIÈRE (à n\'exécuter que juste après, avant toute écriture)'));
+    L.push('-- Ce bloc est entièrement commenté. Décommente-le uniquement en cas de besoin.');
+    L.push('-- Il ne restaure PAS les données détruites par un DROP.');
+    L.push('');
+    var rb = S.rollback.slice().reverse();
+    for(var r=0;r<rb.length;r++){
+      L.push(rb[r].split('\n').map(function(x){ return '-- ' + x; }).join('\n'));
+    }
+  }
+  if(n === 0 && !S.drops.length){
+    L.push('');
+    L.push('-- Aucune différence de structure détectée : les deux bases ont le même schéma.');
+  }
+  return { sql:L.join('\n'), count:n };
+}
+function sec(t){
+  return '\n-- ───────────────────────────────────────────────────────────────\n-- ' + t + '\n-- ───────────────────────────────────────────────────────────────';
+}
+
+/* ═══════════════════ interface ═══════════════════ */
+var KW = 'ALTER|TABLE|ADD|DROP|MODIFY|CHANGE|COLUMN|CREATE|CONSTRAINT|FOREIGN|PRIMARY|UNIQUE|FULLTEXT|SPATIAL|KEY|INDEX|REFERENCES|ENGINE|DEFAULT|CHARSET|CHARACTER|SET|COLLATE|NOT|NULL|AFTER|FIRST|ON|DELETE|UPDATE|CASCADE|RESTRICT|NO|ACTION|IF|EXISTS|VIEW|AS|SELECT|FROM|WHERE|JOIN|AUTO_INCREMENT|COMMENT|ROW_FORMAT|CONVERT|TO|START|TRANSACTION|COMMIT|NAMES|SQL_MODE|FOREIGN_KEY_CHECKS|GENERATED|ALWAYS|VIRTUAL|STORED|USING|BTREE|HASH|DELIMITER|PROCEDURE|FUNCTION|TRIGGER|BEGIN|END|UNSIGNED|ZEROFILL|CHECK';
+var HI = new RegExp('(`[^`]*`)|(\'(?:[^\'\\\\]|\\\\.|\'\')*\')|\\b(' + KW + ')\\b|\\b(\\d+(?:\\.\\d+)?)\\b', 'gi');
+function highlight(sql){
+  var lines = sql.split('\n');
+  if(lines.length > 5000) return esc(sql);
+  var out = [];
+  for(var i=0;i<lines.length;i++){
+    var ln = lines[i];
+    if(/^\s*--/.test(ln)){ out.push('<span class="t-cm">' + esc(ln) + '</span>'); continue; }
+    var res = '', last = 0, m;
+    HI.lastIndex = 0;
+    while((m = HI.exec(ln))){
+      res += esc(ln.slice(last, m.index));
+      if(m[1]) res += '<span class="t-id">' + esc(m[1]) + '</span>';
+      else if(m[2]) res += '<span class="t-st">' + esc(m[2]) + '</span>';
+      else if(m[3]) res += '<span class="t-kw">' + esc(m[3]) + '</span>';
+      else res += '<span class="t-nb">' + esc(m[4]) + '</span>';
+      last = m.index + m[0].length;
+    }
+    res += esc(ln.slice(last));
+    out.push(res);
+  }
+  return out.join('\n');
+}
+
+function readOptions(){
+  var tk = $('#target').value;
+  O = {
+    ignoreWidth: $('#o-width').checked,
+    compareEngine: $('#o-engine').checked,
+    compareColl: $('#o-coll').checked,
+    compareComment: $('#o-comment').checked,
+    includeDrops: $('#o-drop').checked,
+    fkOff: $('#o-fkoff').checked,
+    guard: $('#o-guard').checked,
+    compareViews: $('#o-views').checked,
+    rollback: $('#o-rollback').checked,
+    transaction: $('#o-trans').checked,
+    charsetMode: $('#charsetMode').value,
+    targetKey: tk
+  };
+  return tk;
+}
+
+var lastSql = '';
+function run(){
+  var tk = readOptions();
+  var oldSql = $('#sql-old').value, newSql = $('#sql-new').value;
+  var oldDb = parseDump(oldSql), newDb = parseDump(newSql);
+  paneFoot('#ft-old', oldDb, oldSql);
+  paneFoot('#ft-new', newDb, newSql);
+
+  if(tk === 'auto') tk = targetKeyFor(oldDb.server);
+  C = caps(tk);
+  O.targetKey = tk;
+  $('#run-note').textContent = 'Cible : ' + C.label + ($('#target').value === 'auto' ? ' (détectée)' : '');
+
+  if(!oldDb.order.length && !newDb.order.length){
+    $('#p-diff').innerHTML = '<div class="empty">Colle ou dépose les deux exports SQL, puis clique sur « Comparer ».</div>';
+    $('#out-sql').textContent = '';
+    $('#p-warn').innerHTML = '<div class="empty">Rien à signaler pour l\'instant.</div>';
+    setCount('#n-diff', 0); setCount('#n-sql', 0); setCount('#n-warn', 0);
+    return;
+  }
+
+  var res = compare(oldDb, newDb);
+  var built = buildScript(res, oldDb, newDb);
+  lastSql = built.sql;
+
+  var extra = [];
+  if(oldDb.server && newDb.server && oldDb.server.family !== newDb.server.family)
+    extra.push(['caution', 'versions', 'Les deux dumps ne viennent pas du même moteur (<b>' + oldDb.server.family + '</b> vs <b>' + newDb.server.family + '</b>). Relis attentivement les types et collations générés.', '']);
+  if(!oldDb.server) extra.push(['note', 'versions', 'Version du serveur non détectée dans le dump ancien : la cible a été supposée. Choisis-la à la main si besoin.', '']);
+  var ndv = newDb.server ? parseFloat(newDb.server.version || 0) : 0;
+  if(newDb.server && oldDb.server && newDb.server.family === oldDb.server.family && ndv > parseFloat(oldDb.server.version || 0))
+    extra.push(['note', 'versions', 'La base nouvelle (' + newDb.server.version + ') est plus récente que l\'ancienne (' + oldDb.server.version + ') : migration « vers le bas », les incompatibilités éventuelles sont listées ci-dessus.', '']);
+  for(var z=0;z<oldDb.notes.length;z++) extra.push(['note', 'dump ancien', esc(oldDb.notes[z]), '']);
+  for(var y=0;y<newDb.notes.length;y++) extra.push(['note', 'dump nouveau', esc(newDb.notes[y]), '']);
+  var W = res.W.concat(extra);
+
+  renderDiff(res.D, oldDb, newDb);
+  $('#out-sql').innerHTML = highlight(built.sql);
+  renderWarnings(W);
+  setCount('#n-diff', res.D.counts.add + res.D.counts.mod + res.D.counts.del);
+  setCount('#n-sql', built.count);
+  setCount('#n-warn', W.length, W.some(function(w){ return w[0] === 'danger'; }));
+  $('#foot-stamp').textContent = 'Dernière comparaison : ' + new Date().toLocaleTimeString('fr-FR');
+}
+function setCount(sel, n, hot){
+  var el = $(sel); if(!el) return;
+  el.textContent = n;
+  el.className = 'n' + (hot ? ' hot' : '');
+}
+function paneFoot(sel, db, raw){
+  var el = $(sel), bits = [];
+  if(!raw || !raw.trim()){ el.innerHTML = '<span class="chip none">vide</span>'; return; }
+  if(db.server) bits.push('<span class="chip ok">' + (db.server.family === 'mariadb' ? 'MariaDB' : 'MySQL') + ' ' + esc(db.server.version || '?') + '</span>');
+  else bits.push('<span class="chip none">version inconnue</span>');
+  bits.push('<span class="chip">' + db.order.length + ' table' + (db.order.length > 1 ? 's' : '') + '</span>');
+  var nv = Object.keys(db.views).length, nr = Object.keys(db.routines).length;
+  if(nv) bits.push('<span class="chip">' + nv + ' vue' + (nv > 1 ? 's' : '') + '</span>');
+  if(nr) bits.push('<span class="chip">' + nr + ' routine' + (nr > 1 ? 's' : '') + '</span>');
+  var kb = Math.round(raw.length / 1024);
+  bits.push('<span class="chip">' + (kb < 1 ? '<1' : kb) + ' Ko</span>');
+  if(!db.order.length) bits.push('<span class="chip none">aucun CREATE TABLE trouvé</span>');
+  el.innerHTML = bits.join(' ');
+}
+
+function renderDiff(D, oldDb, newDb){
+  var h = [];
+  var isSample = $('#sql-old').value === SAMPLE_OLD && $('#sql-new').value === SAMPLE_NEW;
+  if(isSample) h.push('<div class="banner"><span class="k">Exemple</span><span>Deux schémas de démonstration sont chargés pour te montrer le rendu. Remplace-les par tes propres exports — ou clique sur « Vider ».</span></div>');
+  h.push('<div class="summary">' +
+    '<div class="stat a"><b>' + D.counts.add + '</b><span>table(s) à créer</span></div>' +
+    '<div class="stat m"><b>' + D.counts.mod + '</b><span>à modifier</span></div>' +
+    '<div class="stat d"><b>' + D.counts.del + '</b><span>en trop dans l\'ancienne</span></div>' +
+    '<div class="stat i"><b>' + D.counts.same + '</b><span>identiques</span></div></div>');
+  if(!D.tables.length){
+    h.push('<div class="empty">Aucune différence de structure entre les deux bases.</div>');
+    $('#p-diff').innerHTML = h.join('');
+    return;
+  }
+  var rank = { a:0, m:1, d:2 };
+  D.tables.sort(function(a,b){ return (rank[a.status] - rank[b.status]) || a.name.localeCompare(b.name); });
+  for(var i=0;i<D.tables.length;i++){
+    var t = D.tables[i];
+    var label = t.status === 'a' ? 'Nouvelle' : t.status === 'd' ? 'En trop' : 'Modifiée';
+    h.push('<div class="tbl' + (D.tables.length <= 8 ? ' open' : '') + '">');
+    h.push('<div class="tbl-hd" role="button" tabindex="0"><span class="caret">▶</span><span class="pill ' + t.status + '">' + label + '</span>' +
+           '<span class="name">' + esc(t.name) + '</span>' +
+           (t.kindLabel ? '<span class="meta">' + esc(t.kindLabel) + '</span>' : '<span class="meta">' + t.changes.length + ' changement(s)</span>') + '</div>');
+    h.push('<div class="tbl-body">');
+    for(var j=0;j<t.changes.length;j++){
+      var c = t.changes[j], cls = c.op === '+' ? 'a' : c.op === '-' ? 'd' : 'm';
+      var line = '<span class="what"><b>' + esc(c.text) + '</b>';
+      if(c.kind && c.kind !== 'table') line += ' <span style="opacity:.6">· ' + kindLabel(c.kind) + '</span>';
+      line += '</span>';
+      var detail = '';
+      if(c.from && c.to) detail = '<div style="margin-top:3px"><code>' + esc(c.from) + '</code><span class="arrow">→</span><code>' + esc(c.to) + '</code></div>';
+      else if(c.to) detail = '<div style="margin-top:3px"><code>' + esc(c.to) + '</code></div>';
+      else if(c.from) detail = '<div style="margin-top:3px"><code>' + esc(c.from) + '</code></div>';
+      h.push('<div class="chg ' + cls + '"><span class="op">' + c.op + '</span><div>' + line + detail + '</div></div>');
+    }
+    if(t.more) h.push('<div class="chg m"><span class="op">…</span><div><span class="what">' + t.more + ' colonne(s) de plus</span></div></div>');
+    h.push('</div></div>');
+  }
+  $('#p-diff').innerHTML = h.join('');
+}
+function kindLabel(k){
+  return { col:'colonne', index:'index', fk:'clé étrangère', opt:'option de table', view:'vue', routine:'routine', table:'table' }[k] || k;
+}
+function renderWarnings(W){
+  if(!W.length){ $('#p-warn').innerHTML = '<div class="empty">Aucun avertissement : le script ne présente pas de risque détecté.</div>'; return; }
+  var order = { danger:0, caution:1, note:2 };
+  var lvlName = { danger:'Risque', caution:'Attention', note:'Info' };
+  W = W.slice().sort(function(a,b){ return order[a[0]] - order[b[0]]; });
+  var h = [];
+  for(var i=0;i<W.length;i++){
+    var w = W[i];
+    h.push('<div class="warn ' + w[0] + '"><div class="stripe"></div><div class="body">' +
+      '<div class="top"><span class="lvl">' + lvlName[w[0]] + '</span><span class="where">' + esc(w[1]) + '</span></div>' +
+      '<p>' + w[2] + '</p>' + (w[3] ? '<div class="fix">' + w[3] + '</div>' : '') + '</div></div>');
+  }
+  $('#p-warn').innerHTML = h.join('');
+}
+
+/* ---------- onglets ---------- */
+var TABS = [['#tab-diff','#p-diff'], ['#tab-sql','#p-sql'], ['#tab-warn','#p-warn'], ['#tab-help','#p-help']];
+TABS.forEach(function(pair){
+  $(pair[0]).addEventListener('click', function(){
+    TABS.forEach(function(p){
+      var on = p[0] === pair[0];
+      $(p[0]).setAttribute('aria-selected', on ? 'true' : 'false');
+      $(p[1]).hidden = !on;
+    });
+  });
+});
+
+/* ---------- fichiers ---------- */
+function wireFile(inputSel, taSel, paneSel){
+  $(inputSel).addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0];
+    if(!f) return;
+    var fr = new FileReader();
+    fr.onload = function(){ $(taSel).value = String(fr.result); run(); };
+    fr.readAsText(f);
+  });
+  var pane = $(paneSel);
+  ['dragenter','dragover'].forEach(function(ev){
+    pane.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); pane.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    pane.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); if(ev === 'dragleave' && pane.contains(e.relatedTarget)) return; pane.classList.remove('drag'); });
+  });
+  pane.addEventListener('drop', function(e){
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if(!f) return;
+    var fr = new FileReader();
+    fr.onload = function(){ $(taSel).value = String(fr.result); run(); };
+    fr.readAsText(f);
+  });
+}
+wireFile('#file-old', '#sql-old', '#pane-old');
+wireFile('#file-new', '#sql-new', '#pane-new');
+
+/* ---------- actions ---------- */
+$('#btn-run').addEventListener('click', run);
+$('#p-diff').addEventListener('click', function(e){
+  var hd = e.target.closest ? e.target.closest('.tbl-hd') : null;
+  if(hd) hd.parentNode.classList.toggle('open');
+});
+$('#p-diff').addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  var hd = e.target.closest ? e.target.closest('.tbl-hd') : null;
+  if(hd){ e.preventDefault(); hd.parentNode.classList.toggle('open'); }
+});
+$('#btn-copy').addEventListener('click', function(){
+  var btn = this;
+  var done = function(ok){ btn.textContent = ok ? '✓ Copié' : 'Copie refusée — sélectionne le texte'; setTimeout(function(){ btn.textContent = 'Copier le script'; }, 1800); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(lastSql).then(function(){ done(true); }, function(){ selectSql(); done(false); });
+  } else { selectSql(); done(false); }
+});
+function selectSql(){
+  var el = $('#out-sql'), r = document.createRange();
+  r.selectNodeContents(el);
+  var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+$('#btn-select').addEventListener('click', selectSql);
+['#target','#charsetMode'].forEach(function(s){ $(s).addEventListener('change', run); });
+['#o-width','#o-engine','#o-coll','#o-comment','#o-drop','#o-fkoff','#o-guard','#o-views','#o-rollback','#o-trans']
+  .forEach(function(s){ $(s).addEventListener('change', run); });
+$('#btn-clear').addEventListener('click', function(){
+  $('#sql-old').value = ''; $('#sql-new').value = ''; run();
+  $('#sql-old').focus();
+});
+$('#btn-theme').addEventListener('click', function(){
+  var root = document.documentElement, cur = root.getAttribute('data-theme');
+  var dark = cur ? cur === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+});
+
+/* ---------- exemple ---------- */
+var SAMPLE_OLD = ($('#sample-old').textContent || '').trim();
+var SAMPLE_NEW = ($('#sample-new').textContent || '').trim();
+function loadSample(){ $('#sql-old').value = SAMPLE_OLD; $('#sql-new').value = SAMPLE_NEW; run(); }
+$('#btn-sample').addEventListener('click', loadSample);
+loadSample();
+
+})();
+</script>
+
+</body>
+</html>
