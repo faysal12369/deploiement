@@ -276,6 +276,9 @@ class Operations {
     final db = ((s['db'] as Map?) ?? {}).cast<String, dynamic>();
     if (db['ok'] == true) {
       log.ok(tr('Database "{name}": {tables} tables ({version}), settings from {source}.', {'name': db['name'], 'tables': db['tables'], 'version': db['version'], 'source': db['source']}));
+    } else if (dbMissing(db)) {
+      log.warn(tr('The database "{name}" does not exist on the target: More › Install… creates it and copies a database into it (this PC\'s, or another target\'s).',
+          {'name': dbNameOf(db)}));
     } else {
       log.warn(tr('No database: {error}', {'error': db['error'] ?? '?'}));
     }
@@ -293,9 +296,11 @@ class Operations {
         .replaceFirst('{{PRIVATE_DIR}}', dir);
   }
 
-  /// The agent in a file, to copy by hand into the project folder (USB key, remote desktop…).
-  Future<File> saveAgent(Target t) async {
-    final d = Directory(p.join(Store.work.path, 'agents'))..createSync(recursive: true);
+  /// The agent in a file, to copy by hand into the project folder (USB key, remote desktop…): in [folder] when given
+  /// (the one chosen by the user), else in the working folder. Its name is always the target's agent name: the app
+  /// calls the agent by it.
+  Future<File> saveAgent(Target t, {String? folder}) async {
+    final d = Directory(folder ?? p.join(Store.work.path, 'agents'))..createSync(recursive: true);
     final f = File(p.join(d.path, t.agentName));
     await f.writeAsString(await _agentCode(t));
     return f;
@@ -675,6 +680,11 @@ class Operations {
                 : tr('Deploying "{project}" to "{target}": {parts} only — the target keeps its data', {'project': pr.name, 'target': t.name, 'parts': parts.label}));
             await _configure(a, t);
             final status = await _status(a, t, s: s);
+            final sdb = ((status['db'] as Map?) ?? {}).cast<String, dynamic>();
+            if (sdb['ok'] != true && dbMissing(sdb)) {
+              throw AgentError(tr('The database "{name}" does not exist on the target: More › Install… creates it and copies a database into it (this PC\'s, or another target\'s).',
+                  {'name': dbNameOf(sdb)}));
+            }
             var pkg = package;
             Map<String, dynamic>? plan;
             if (pkg != null) {
@@ -897,8 +907,15 @@ class Operations {
             log.ok(tr('{written} file(s) written, {same} already there.', {'written': w['written'], 'same': w['same']}));
             if (t.db.isSet) await _configure(a, t);
             if (src != null) {
-              final st = await a.require('status');
-              final db = ((st['db'] as Map?) ?? {}).cast<String, dynamic>();
+              var st = await a.require('status');
+              var db = ((st['db'] as Map?) ?? {}).cast<String, dynamic>();
+              if (db['ok'] != true && dbMissing(db)) {
+                log.info(tr('The database "{name}" does not exist on the target: it is created.', {'name': dbNameOf(db)}));
+                await a.require('create_db');
+                log.ok(tr('Database "{name}" created.', {'name': dbNameOf(db)}));
+                st = await a.require('status');
+                db = ((st['db'] as Map?) ?? {}).cast<String, dynamic>();
+              }
               if (db['ok'] != true) {
                 throw AgentError(tr('The target has no database settings ({error}): fill the target database in its settings, or send a .env with "Target files".', {'error': db['error']}));
               }
@@ -986,3 +1003,12 @@ class Operations {
 
 /// "table → rows" as the agent or the local database gives it (PHP sends an empty object as []).
 Map<String, int> _counts(Object? j) => {if (j is Map) for (final e in j.entries) '${e.key}': (e.value as num).toInt()};
+
+/// The settings of the target's database are known but the database is not there (deleted, never made) — agent 9 says
+/// "missing"; an older one only gives MySQL's error 1049.
+bool dbMissing(Map<String, dynamic> db) =>
+    db['missing'] == true || RegExp(r'\[1049\]|Unknown database', caseSensitive: false).hasMatch('${db['error'] ?? ''}');
+
+/// The name of a missing database: from agent 9, else from MySQL's message.
+String dbNameOf(Map<String, dynamic> db) =>
+    '${db['name'] ?? RegExp(r"Unknown database '([^']+)'").firstMatch('${db['error'] ?? ''}')?[1] ?? '?'}';

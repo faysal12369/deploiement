@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.1 — 2026-11-19
+
+- "Save the agent to a file" asks where to save it (the project folder of the server, a USB key…), keeps the name
+  the app calls it by, and says where it is. It never fails silently any more: on a PC where the program sits in a
+  folder Windows protects (Program Files, a protected Desktop), the working folder moves to
+  `%LOCALAPPDATA%\Deploiement\work`.
+- Tables: one control per table, Nothing / Structure / Structure + data, and "All tables:" in the Deploy window.
+- A server whose database was deleted: Test says so, Deploy refuses, More › Install… creates the database and copies
+  one into it.
+- GitHub: the address of a page of the repository (…/branches, …/tree/…) is turned into the repository address; a
+  410 or 404 is explained as a wrong address, not as "GitHub cannot be reached".
+
 ## 1.0.0 — 2026-11-18
 
 First public version.

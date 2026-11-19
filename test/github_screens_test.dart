@@ -77,7 +77,8 @@ void main() {
     await shotProject('2_linked');
     // the block reads the folder when the page opens; git ran meanwhile in the test: Refresh, like a user would
     await tester.tap(find.byTooltip('Actualiser'));
-    for (var i = 0; i < 20; i++) {
+    // git, then "gh auth status" (1.5 s once the GitHub CLI is installed): waited for, up to 15 s
+    for (var i = 0; i < 60 && find.text('Envoyer sur GitHub…').evaluate().isEmpty; i++) {
       await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 250)));
       await tester.pumpAndSettle();
     }

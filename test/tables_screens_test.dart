@@ -68,17 +68,22 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    await tester.ensureVisible(find.byKey(const ValueKey('table-data-mouvements_stock')));
-    await tester.tap(find.byKey(const ValueKey('table-data-mouvements_stock')));
+    // one control per table, three positions (19/11/2026: "make it easier")
+    Future<void> pick(String label) async {
+      final f = find.descendant(of: find.byKey(const ValueKey('table-pick-mouvements_stock')), matching: find.text(label));
+      await tester.ensureVisible(f);
+      await tester.tap(f);
+    }
+
+    await pick('Structure + données');
     await autosaved();
-    expect(saved().data, true);
+    expect([saved().structure, saved().data], [true, true]);
     expect(find.text('Clé (auto)'), findsNWidgets(3));
-    await tester.tap(find.byKey(const ValueKey('table-data-mouvements_stock')));
-    await tester.tap(find.byKey(const ValueKey('table-structure-mouvements_stock')));
+    await pick('Rien');
     await autosaved();
     expect([saved().structure, saved().data], [false, false]);
     expect(find.text("Ni structure ni données : cette table n'est pas envoyée."), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('table-structure-mouvements_stock')));
+    await pick('Structure');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Tables : structure et données'));
     await tester.pumpAndSettle();
@@ -159,8 +164,8 @@ void main() {
     // no key: "Data" cannot be ticked (18/11/2026 it stopped the simulation)
     expect(find.text('85 lignes ici, 79 sur la cible · clé primaire « id » = simple compteur (autres numéros sur la cible) : données impossibles à envoyer'),
         findsOneWidget, reason: '18/11/2026: "but it has a primary key" — the hint says that key is a counter');
-    final noKeyData = tester.widget<CheckLine>(find.byKey(const ValueKey('deploy-data-order_suppliers')));
-    expect((noKeyData.value, noKeyData.enabled), (false, false), reason: '18/11/2026 "wtf???": ticked next to "data cannot be sent"');
+    final noKeyData = tester.widget<TablePick>(find.byKey(const ValueKey('deploy-pick-order_suppliers'), skipOffstage: false));
+    expect((noKeyData.position, noKeyData.dataEnabled), (TablePick.none, false), reason: '18/11/2026 "wtf???": ticked next to "data cannot be sent"');
     expect(find.byKey(const ValueKey('deploy-rows-order_suppliers')), findsNothing, reason: 'no "85 écartées" in red: the hint says why');
     // the rows of each table: missing on the target, to update, left out (why: hovering), the same
     expect(find.text('553 lignes ici, 4 sur la cible'), findsOneWidget);
@@ -170,7 +175,10 @@ void main() {
     final devises = tableCandidates(pr, r).firstWhere((c) => c.table == 'currencies'); // below the fold of the list
     expect([for (final (t, _) in tableRowsLine(devises, Theme.of(ctx).extension<Palette>()!)) t], ['4 déjà identiques']);
     expect(find.text('19 929 lignes de plus ici, données non envoyées', findRichText: true), findsOneWidget, reason: 'data not sent: only the difference');
-    await tester.tap(find.byKey(const ValueKey('deploy-data-stock_items')));
+    final bothOfArticles = find.descendant(of: find.byKey(const ValueKey('deploy-pick-stock_items'), skipOffstage: false), matching: find.text('Structure + données'));
+    await tester.ensureVisible(bothOfArticles);
+    await tester.pumpAndSettle();
+    await tester.tap(bothOfArticles);
     await tester.pumpAndSettle();
     expect(find.text('Simuler avec ce choix'), findsOneWidget);
     expect(find.text('19 929 lignes de plus ici', findRichText: true), findsOneWidget, reason: 'ticked: no more "data not sent"');
@@ -178,11 +186,11 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('confirm-deploy')));
     await tester.pumpAndSettle();
     final c = (await result)!;
-    expect(c.tables!['stock_items'], (structure: false, data: true));
+    expect(c.tables!['stock_items'], (structure: true, data: true), reason: 'its data, with its structure');
     final before = pr.tablesKey;
     applyTableChoice(pr, c.tables!);
     expect(pr.tablesKey, isNot(before), reason: 'a simulation made before this choice is made again before deploying');
-    expect([for (final s in pr.sync) '${s.table} ${s.structure} ${s.data}'], ['currencies false true', 'purchase_orders false true', 'stock_items false true'],
+    expect([for (final s in pr.sync) '${s.table} ${s.structure} ${s.data}'], ['currencies false true', 'purchase_orders false true', 'stock_items true true'],
         reason: 'the no-key table leaves the list with the choice');
 
     // "Deploy" takes the data of a no-key table out of the list before asking; the agent's "left out" for it is not counted

@@ -24,6 +24,7 @@ declare(strict_types=1);
  *   tables          the structure of chosen tables made like the developer's: table created, columns and indexes
  *                   added, columns changed - never a column, an index or a row removed. dry_run: true = simulation
  *   import_db       load a full database copy (.sql / .sql.gz) step by step ; replace: true drops the tables first
+ *   create_db       create the target database when it does not exist (its settings are known, the database is not)
  *   mark_migrations record every migration of a release as applied (after importing an up-to-date copy)
  *   restore_files   put back the files of a files backup
  *   summary         tables and row counts of the target database
@@ -41,7 +42,7 @@ declare(strict_types=1);
 
 const TOKEN_SHA256  = '{{TOKEN_SHA256}}';   // written by the app when it places the agent
 const PRIVATE_DIR   = '{{PRIVATE_DIR}}';    // relative to this folder: ".deploy", "../.deploy-myshop"…
-const AGENT_VERSION = 8;
+const AGENT_VERSION = 9;
 const WORK_SECONDS  = 15.0;                 // work per request; long tasks resume where they stopped
 /** Columns that name a row when two databases are compared, the first present wins (after the key). */
 const DP_LABELS = ['numero', 'code', 'raison_sociale', 'nom', 'name', 'title', 'titre', 'intitule', 'libelle', 'label',
@@ -101,6 +102,7 @@ try {
         'verify'          => aVerify($P),
         'tables'          => aTables($P),
         'import_db'       => aImportDb($P),
+        'create_db'       => aCreateDb(),
         'mark_migrations' => aMarkMigrations($P),
         'restore_files'   => aRestoreFiles($P),
         'summary'         => dpSummary(dpPdo()),
@@ -1246,7 +1248,7 @@ function aStatus(): array
     $m = dpLastManifest();
     $e = [
         'ok' => true, 'agent' => AGENT_VERSION, 'agent_sha1' => (string)sha1_file(__FILE__),
-        'features' => ['file', 'compare', 'update_agent', 'row_values', 'row_grid', 'table', 'structure', 'clone', 'schema_sql', 'inventory', 'sql', 'tables', 'sync_steps', 'counts'], 'php' => PHP_VERSION, 'os' => PHP_OS_FAMILY,
+        'features' => ['file', 'compare', 'update_agent', 'row_values', 'row_grid', 'table', 'structure', 'clone', 'schema_sql', 'inventory', 'sql', 'tables', 'sync_steps', 'counts', 'create_db'], 'php' => PHP_VERSION, 'os' => PHP_OS_FAMILY,
         'server' => (string)($_SERVER['SERVER_SOFTWARE'] ?? ''), 'extensions' => $ext,
         'root' => DP_ROOT, 'writable' => is_writable(DP_ROOT), 'private' => str_replace('\\', '/', dpPrivate()),
         'files' => count(array_diff(scandir(DP_ROOT) ?: [], ['.', '..'])),
@@ -1263,6 +1265,10 @@ function aStatus(): array
             'tracked' => dpApplied($pdo) !== null];
     } catch (\Throwable $t) {
         $e['db'] = ['ok' => false, 'error' => $t->getMessage()];
+        // the settings are known but the database is not there (deleted, never made): "Install…" can create it
+        if ($t instanceof PDOException && (str_contains($t->getMessage(), '[1049]') || str_contains($t->getMessage(), 'Unknown database'))) {
+            $e['db'] += ['missing' => true, 'name' => (string)(dpDbConfig()['name'] ?? '')];
+        }
     }
     return $e;
 }
@@ -1774,6 +1780,32 @@ function aTables(array $p): array
     $last = end($r['tables']);
     return ['ok' => !$r['stopped'], 'tables' => $r['tables'], 'dry_run' => $dry]
         + ($r['stopped'] ? ['message' => 'Table ' . $last['table'] . ': ' . ($last['error'] ?? '')] : []);
+}
+
+/**
+ * Creates the target database when it is missing (asked 19/11/2026: the database of a test PC was deleted, "Install…"
+ * could not make it again). Connects without a database; the user of the settings needs the right to create one —
+ * on shared hosting it is created in the host's panel instead, and the message says so.
+ */
+function aCreateDb(): array
+{
+    $c = dpDbConfig();
+    $name = (string)($c['name'] ?? '');
+    if (preg_match('/^[A-Za-z0-9_$-]{1,64}$/', $name) !== 1) {
+        throw new RuntimeException('Invalid database name: ' . $name);
+    }
+    try {
+        dpConnect($c);
+        return ['ok' => true, 'created' => false, 'name' => $name];   // already there
+    } catch (\Throwable) {
+    }
+    try {
+        dpConnect(['name' => ''] + $c)->exec('CREATE DATABASE IF NOT EXISTS ' . dpQ($name) . ' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    } catch (\PDOException $e) {
+        return ['ok' => false, 'code' => 'create_refused', 'message' => 'The database "' . $name . '" could not be created with the user "' . ($c['user'] ?? '')
+            . '": ' . ($e->errorInfo[2] ?? $e->getMessage()) . '. Create it in your host\'s panel (or phpMyAdmin), then try again.'];
+    }
+    return ['ok' => true, 'created' => true, 'name' => $name];
 }
 
 /** Loads a .sql / .sql.gz from packages/ or backups/, step by step. replace: drops every table and view first. */

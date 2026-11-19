@@ -62,6 +62,16 @@ class Git {
 
   Future<String> _out(List<String> args) async => '${(await _run(args)).stdout}'.trim();
 
+  /// The address of a GitHub repository from what was pasted: the address of one of its pages (19/11/2026: the
+  /// address bar on ".../shop/branches" gave "GitHub cannot be reached"), without ".git", or without "https://".
+  /// Anything else (SSH, another server, a folder) is kept as it is.
+  static String repoUrl(String raw) {
+    final s = raw.trim();
+    final m = RegExp(r'^(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9-]+)/([A-Za-z0-9._-]+?)(?:\.git)?(?:[/?#].*)?$', caseSensitive: false).firstMatch(s);
+    if (m == null) return s;
+    return 'https://github.com/${m[1]}/${m[2]}.git';
+  }
+
   /// A message of git turned into what to do.
   static String explain(String raw) {
     final s = raw.trim();
@@ -69,13 +79,17 @@ class Git {
     if (l.contains('fetch first') || l.contains('non-fast-forward') || l.contains('[rejected]')) {
       return tr('GitHub already has commits on this branch that are not on this PC: get them first (git pull), then send again. Nothing was overwritten.');
     }
-    if (l.contains('authentication failed') || l.contains('could not read username') || l.contains('terminal prompts disabled') || l.contains('permission denied') || l.contains('403')) {
+    if (l.contains('authentication failed') || l.contains('could not read username') || l.contains('terminal prompts disabled') || l.contains('permission denied') || l.contains('error: 403')) {
       return tr('GitHub refused the sign-in: sign in once (a browser window opens on the first send), or check that this account can write to the repository.');
     }
-    if (l.contains('repository not found') || l.contains('not found')) {
+    // GitHub answers 410 or 400 to the address of a page that is not the repository itself
+    if (RegExp(r'returned error: (400|410)').hasMatch(l)) {
+      return tr('This address is a page of the GitHub site, not a repository: use the address of the repository, like https://github.com/account/project.git.');
+    }
+    if (l.contains('repository not found') || l.contains('not found') || l.contains('returned error: 404')) {
       return tr('Repository not found on GitHub, or this account cannot write to it: check its address.');
     }
-    if (l.contains('could not resolve host') || l.contains('unable to access')) {
+    if (l.contains('could not resolve host') || l.contains('failed to connect') || l.contains('timed out') || l.contains("couldn't connect")) {
       return tr('GitHub cannot be reached from this PC: check the internet connection.');
     }
     return s.split('\n').where((x) => x.trim().isNotEmpty).take(3).join('\n');
@@ -135,10 +149,25 @@ class Git {
     }
   }
 
-  /// "origin" is set to [url] (added, or changed).
-  Future<void> link(String url) async {
+  /// "origin" is set to [url] (added, or changed), the address of a GitHub page turned into the repository's.
+  /// Returns the address set.
+  Future<String> link(String url) async {
+    final u = repoUrl(url);
     final has = (await _run(['remote', 'get-url', 'origin'], check: false)).exitCode == 0;
-    await _run(['remote', has ? 'set-url' : 'add', 'origin', url.trim()]);
+    await _run(['remote', has ? 'set-url' : 'add', 'origin', u]);
+    return u;
+  }
+
+  /// A project linked before 19/11/2026 with the address of a GitHub page: "origin" is set to the repository's.
+  /// Returns the address set, or null when there was nothing to change.
+  Future<String?> repairOrigin() async {
+    final o = await _run(['remote', 'get-url', 'origin'], check: false);
+    if (o.exitCode != 0) return null;
+    final now = '${o.stdout}'.trim();
+    final good = repoUrl(now);
+    if (good == now) return null;
+    await _run(['remote', 'set-url', 'origin', good]);
+    return good;
   }
 
   /// A private repository on GitHub with the name of [name], linked as "origin" (the GitHub CLI, signed in).
@@ -169,6 +198,8 @@ class Git {
       log?.info(tr('Nothing new to commit: the last commit is sent.'));
     }
     final id = await _out(['rev-parse', '--short', 'HEAD']);
+    final fixed = await repairOrigin();
+    if (fixed != null) log?.info(tr('GitHub address corrected: {url}', {'url': fixed}));
     log?.info(tr('Sending to GitHub, branch "{branch}"…', {'branch': branch}));
     await _run(['push', 'origin', 'HEAD:refs/heads/$branch']);
     return id;

@@ -403,13 +403,31 @@ class Store {
   }
   static File get _file => File(p.join(folder, 'config.json'));
 
-  /// Working folder (built packages, database copies): next to the installed program, or the source folder in dev.
+  /// Working folder (built packages, database copies, agents saved to a file): next to the installed program when it
+  /// can be written, else %LOCALAPPDATA%\Deploiement\work — 19/11/2026: the program in a folder Windows protects
+  /// (Program Files, a protected Desktop or Documents) could not write there, and "Save the agent" did nothing.
+  /// In development: the source folder.
   static Directory get work {
-    final exe = File(Platform.resolvedExecutable);
-    final installed = p.basename(exe.path).toLowerCase() == 'deploiement.exe' && !exe.path.contains(r'\build\');
-    final d = Directory(p.join(installed ? exe.parent.path : Directory.current.path, 'work'));
+    final d = Directory(_workPath ??= _workFolder());
     d.createSync(recursive: true);
     return d;
+  }
+
+  static String? _workPath;
+  static String _workFolder() {
+    final exe = File(Platform.resolvedExecutable);
+    final installed = p.basename(exe.path).toLowerCase() == 'deploiement.exe' && !exe.path.contains(r'\build\');
+    final local = Platform.environment['LOCALAPPDATA'] ?? Platform.environment['APPDATA'] ?? Directory.systemTemp.path;
+    for (final base in [installed ? exe.parent.path : Directory.current.path, p.join(local, 'Deploiement')]) {
+      try {
+        final d = Directory(p.join(base, 'work'))..createSync(recursive: true);
+        File(p.join(d.path, '.write-test'))
+          ..writeAsStringSync('ok')
+          ..deleteSync();
+        return d.path;
+      } catch (_) {}
+    }
+    return p.join(Directory.systemTemp.path, 'Deploiement', 'work');
   }
 
   static (AppSettings, List<Project>) load() {

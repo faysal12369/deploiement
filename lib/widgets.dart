@@ -707,3 +707,44 @@ class _DataGridState extends State<DataGrid> {
     return (longest * 7.6 + 24).clamp(70, 320).toDouble();
   }
 }
+
+/// What goes of one table (asked 19/11/2026: "make the choice structure or data easier"): one control with three
+/// positions instead of two boxes — nothing, its structure, its structure and its data. A table saved with its data
+/// only (before the choice existed) shows "Structure + data" and stays as it is until another position is picked.
+class TablePick extends StatelessWidget {
+  const TablePick({super.key, required this.structure, required this.data, required this.onChanged, this.dataEnabled = true});
+  final bool structure, data;
+  final bool dataEnabled; // false: its data cannot go (no key, "Data" unticked above): the third position is greyed
+  final void Function(bool structure, bool data) onChanged;
+
+  static const none = 0, structureOnly = 1, both = 2;
+
+  int get position => data && dataEnabled ? both : (structure ? structureOnly : none);
+
+  @override
+  Widget build(BuildContext context) {
+    final ty = Ty.of(context);
+    return SegmentedButton<int>(
+      showSelectedIcon: false,
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: ty.small.copyWith(fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        selectedBackgroundColor: ty.p.accent,
+        selectedForegroundColor: ty.p.onAccent,
+      ),
+      segments: [
+        ButtonSegment(value: none, label: Text(tr('Nothing'), key: const ValueKey('pick-none'))),
+        ButtonSegment(value: structureOnly, label: Text(tr('Structure'), key: const ValueKey('pick-structure'))),
+        ButtonSegment(value: both, label: Text(tr('Structure + data'), key: const ValueKey('pick-both')), enabled: dataEnabled),
+      ],
+      selected: {position},
+      onSelectionChanged: (s) => switch (s.first) {
+        none => onChanged(false, false),
+        structureOnly => onChanged(true, false),
+        _ => onChanged(true, true),
+      },
+    );
+  }
+}

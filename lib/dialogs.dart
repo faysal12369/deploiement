@@ -295,7 +295,7 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
   bool chosen() => files || (canStructure && structure) || (canData && data);
   return showSheet<DeployChoice>(
     context,
-    width: candidates.isEmpty ? 500 : 680,
+    width: candidates.isEmpty ? 500 : 760,
     title: tr('Deploy to "{name}"?', {'name': t.name}),
     body: (ctx, set) {
       final ty = Ty.of(ctx);
@@ -369,8 +369,23 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
           Text(tr('For each table: its structure only (columns, indexes), or its data too (rows added or updated, never deleted). Kept for the next deployments.'),
               style: ty.small),
           const SizedBox(height: 6),
+          // the same choice for every table at once (19/11/2026: "make it easier")
+          Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+            Text(tr('All tables:'), style: ty.small),
+            for (final (key, label, s, d) in [
+              ('all-none', tr('Nothing'), false, false),
+              ('all-structure', tr('Structure'), true, false),
+              ('all-both', tr('Structure + data'), true, true),
+            ])
+              SmallButton(label, key: ValueKey('deploy-$key'), onPressed: () => set(() {
+                    for (final c in candidates) {
+                      choice[c.table] = (structure: s, data: d && !c.noKey && dataOn());
+                    }
+                  })),
+          ]),
+          const SizedBox(height: 6),
           Container(
-            constraints: const BoxConstraints(maxHeight: 260),
+            constraints: const BoxConstraints(maxHeight: 300),
             decoration: BoxDecoration(border: Border.all(color: ty.p.rule), borderRadius: BorderRadius.circular(8)),
             child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), children: [
               for (final c in candidates)
@@ -384,19 +399,14 @@ Future<DeployChoice?> confirmDeploy(BuildContext context, Target t, Report r, {S
                         ?_rowsText(c, ty, dataOn() && choice[c.table]!.data),
                       ]),
                     ),
-                    SizedBox(
-                      width: 118,
-                      child: CheckLine(tr('Structure'), key: ValueKey('deploy-structure-${c.table}'), value: choice[c.table]!.structure, onChanged: (v) {
-                        set(() => choice[c.table] = (structure: v, data: choice[c.table]!.data));
-                      }),
-                    ),
-                    SizedBox(
-                      width: 118,
-                      // a table without a key, or "Data" unticked above: its data does not go, "Data" stays unticked
-                      child: CheckLine(tr('Data'), key: ValueKey('deploy-data-${c.table}'), value: !c.noKey && dataOn() && choice[c.table]!.data,
-                          enabled: !c.noKey && dataOn(), onChanged: (v) {
-                        set(() => choice[c.table] = (structure: choice[c.table]!.structure, data: v));
-                      }),
+                    const SizedBox(width: 10),
+                    // a table without a key, or "Data" unticked above: its data does not go, "Structure + data" is greyed
+                    TablePick(
+                      key: ValueKey('deploy-pick-${c.table}'),
+                      structure: choice[c.table]!.structure,
+                      data: choice[c.table]!.data,
+                      dataEnabled: !c.noKey && dataOn(),
+                      onChanged: (s, d) => set(() => choice[c.table] = (structure: s, data: d)),
                     ),
                   ]),
                 ),

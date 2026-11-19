@@ -173,18 +173,23 @@ void main() {
           ..sync = [SyncResult('devises', 3, 1, 0, 0, [], [])];
     final t = Target(id: 't', name: 'serveur', url: 'http://x');
     CheckLine box(String key) => tester.widget<CheckLine>(find.byKey(ValueKey(key)));
+    TablePick pick(String table) => tester.widget<TablePick>(find.byKey(ValueKey('deploy-pick-$table'), skipOffstage: false));
+    bool dataShown(String table) => pick(table).position == TablePick.both;
 
     // 1. "Data" unticked: the data of each table is unticked too (and cannot be ticked), the choice of the list is kept
     var result = confirmDeploy(ctx, t, report(), project: pr);
     await tester.pumpAndSettle();
-    expect((box('deploy-data-devises').value, box('deploy-data-devises').enabled), (true, true));
+    expect((dataShown('devises'), pick('devises').dataEnabled), (true, true));
     await tester.tap(find.byKey(const ValueKey('part-data')));
     await tester.pumpAndSettle();
     expect(box('part-data').value, false);
-    expect((box('deploy-data-devises').value, box('deploy-data-devises').enabled), (false, false), reason: 'no table data ticked next to "Data" unticked');
+    expect((dataShown('devises'), pick('devises').dataEnabled), (false, false), reason: 'no table data ticked next to "Data" unticked');
 
     // 2. a table's structure ticked: "Simulate with this choice" gives back the parts as they were chosen
-    await tester.tap(find.byKey(const ValueKey('deploy-structure-articles')));
+    final structureOfArticles = find.descendant(of: find.byKey(const ValueKey('deploy-pick-articles'), skipOffstage: false), matching: find.text('Structure'));
+    await tester.ensureVisible(structureOfArticles);
+    await tester.pumpAndSettle();
+    await tester.tap(structureOfArticles);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('confirm-deploy')));
     await tester.pumpAndSettle();
@@ -199,7 +204,7 @@ void main() {
     result = confirmDeploy(ctx, t, report(), project: pr, parts: c.parts);
     await tester.pumpAndSettle();
     expect(box('part-data').value, false);
-    expect(box('deploy-data-devises').value, false);
+    expect(dataShown('devises'), false);
     await tester.tap(find.byKey(const ValueKey('confirm-deploy')));
     await tester.pumpAndSettle();
     c = (await result)!;

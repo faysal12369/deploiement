@@ -116,9 +116,23 @@ class _TargetPageState extends State<TargetPage> {
     if (s == true) await _test();
   }
 
+  /// The agent saved where the user chooses — the project folder of the target on a shared drive, a USB key… —
+  /// 19/11/2026, on another PC: "it does not create the agent.php, so I can put it into the target folder". The file
+  /// keeps the target's agent name whatever was typed; an error is always shown, never swallowed.
   Future<void> _saveAgent() async {
-    final f = await Operations(app.settings, app.journal).saveAgent(t);
-    await Process.start('explorer', ['/select,', f.path]);
+    try {
+      final where = await pickSaveFile(name: t.agentName, filter: 'PHP (*.php)|*.php', title: tr('Save the agent in the project folder of the target'));
+      if (where == null) return;
+      final f = await Operations(app.settings, app.journal).saveAgent(t, folder: File(where).parent.path);
+      final renamed = where.split(RegExp(r'[\\/]')).last.toLowerCase() != t.agentName.toLowerCase();
+      app.journal.ok(tr('Agent saved: {path} — copy it into the project folder of the target.', {'path': f.path}));
+      if (renamed) app.journal.warn(tr('The agent keeps its name {file}: the app calls it by this name.', {'file': t.agentName}));
+      app.notify(tr('Agent saved'),
+          text: tr('{path} — if this is not the project folder of the target, copy the file there, then Test.', {'path': f.path}),
+          action: (tr('Show'), () => Process.start('explorer', ['/select,', f.path])));
+    } catch (e) {
+      app.notify(tr('The agent could not be saved'), text: '$e'.replaceFirst('AgentError: ', '').replaceFirst('FileSystemException: ', ''), severity: Severity.error);
+    }
   }
 
   Future<void> _install() async {
@@ -261,6 +275,19 @@ class _TargetPageState extends State<TargetPage> {
             action: Align(
               alignment: Alignment.centerLeft,
               child: FilledButton(onPressed: () => app.go('t:${t.id}:settings'), child: Text(tr('Open the settings'))),
+            ),
+          ),
+        // the database of the target is gone (19/11/2026: deleted on a test PC to start again): "Install…" makes it
+        if (((app.statuses[t.id]?['db'] as Map?) ?? {}).cast<String, dynamic>() case final db
+            when !busy && missing.isEmpty && db.isNotEmpty && db['ok'] != true && dbMissing(db))
+          Notice(
+            color: ty.p.changed,
+            icon: Icons.storage_outlined,
+            title: tr('The database "{name}" does not exist on the target', {'name': dbNameOf(db)}),
+            text: tr('Install… creates it and copies a database into it: this PC\'s, or another target\'s, with the files of the project. Deploying waits until then.'),
+            action: Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton(key: const ValueKey('install-missing-db'), onPressed: on(_install), child: Text(tr('Install…'))),
             ),
           ),
         if (app.watchProblems[t.id] case final problems? when !busy)

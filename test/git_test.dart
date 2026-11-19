@@ -83,6 +83,55 @@ void main() {
     await expectLater(g.send(branch: 'bad..name', message: 'x'), throwsA(isA<AgentError>()));
   });
 
+  // 19/11/2026: the address bar on the "branches" page of the repository was pasted; GitHub answered 410 and the app
+  // said "GitHub cannot be reached from this PC".
+  test('the address of a GitHub page is turned into the repository address', () async {
+    expect([
+      for (final u in [
+        'https://github.com/account/shop/branches',
+        'https://github.com/account/shop',
+        'https://github.com/account/shop/',
+        'https://github.com/account/shop.git',
+        'github.com/account/shop/tree/latest',
+        'https://www.github.com/a-b/my.site?tab=readme#top',
+        '  https://github.com/a/b/blob/main/index.php  ',
+      ])
+        Git.repoUrl(u)
+    ], [
+      'https://github.com/account/shop.git',
+      'https://github.com/account/shop.git',
+      'https://github.com/account/shop.git',
+      'https://github.com/account/shop.git',
+      'https://github.com/account/shop.git',
+      'https://github.com/a-b/my.site.git',
+      'https://github.com/a/b.git',
+    ]);
+    for (final u in ['git@github.com:a/b.git', 'https://gitlab.com/a/b', r'C:\repos\remote.git', 'https://github.com/a']) {
+      expect(Git.repoUrl(u), u, reason: 'not a GitHub page: kept');
+    }
+
+    // what git says, and what the screen says
+    expect(Git.explain("fatal: unable to access 'https://github.com/account/shop/branches/': The requested URL returned error: 410"),
+        contains('page of the GitHub site, not a repository'));
+    expect(Git.explain("fatal: unable to access 'https://github.com/a/b.git/': The requested URL returned error: 404"), contains('Repository not found'));
+    expect(Git.explain("fatal: unable to access 'https://github.com/a/b.git/': Could not resolve host: github.com"), contains('cannot be reached'));
+    expect(Git.explain("fatal: unable to access 'https://github.com/a/b.git/': SSL certificate problem: unable to get local issuer certificate"),
+        contains('SSL certificate problem'), reason: 'shown as it is, not "cannot be reached"');
+    expect(Git.explain('remote: Permission to a/b.git denied to x.\nfatal: unable to access ...: The requested URL returned error: 403'), contains('refused the sign-in'));
+
+    // linked with a page address: the repository address is set; a project linked that way before is repaired
+    final root = Directory.systemTemp.createTempSync('deploiement-git-url');
+    addTearDown(() => root.deleteSync(recursive: true));
+    await git(['init', '-q', root.path]);
+    final g = Git(root.path);
+    expect(await g.link('https://github.com/account/shop/branches'), 'https://github.com/account/shop.git');
+    expect(await git(['remote', 'get-url', 'origin'], dir: root.path), 'https://github.com/account/shop.git');
+    await git(['remote', 'set-url', 'origin', 'https://github.com/account/shop/branches'], dir: root.path);
+    expect(await g.repairOrigin(), 'https://github.com/account/shop.git');
+    expect(await git(['remote', 'get-url', 'origin'], dir: root.path), 'https://github.com/account/shop.git');
+    expect(await g.repairOrigin(), isNull, reason: 'nothing left to change');
+  });
+
   test('what looks like a password, and the GitHub part of a deployment', () {
     expect([for (final f in ['.env', '.env.production', 'config/db.php', 'config/app.local.php', 'dump.sql', 'index.php', 'pages/home.php']) GitChange('M', f).sensitive],
         [true, true, true, true, true, false, false]);

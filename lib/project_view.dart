@@ -437,8 +437,8 @@ class _GitBlockState extends State<_GitBlock> {
             OutlinedButton(
               key: const ValueKey('git-link'),
               onPressed: working || remote.text.trim().isEmpty ? null : () => _do(() async {
-                    await git.link(remote.text.trim());
-                    pr.gitRemote = remote.text.trim();
+                    pr.gitRemote = await git.link(remote.text.trim());
+                    remote.text = pr.gitRemote;
                   }, tr('Project linked to GitHub.')),
               child: Text(tr('Link')),
             ),
@@ -545,19 +545,16 @@ class _SyncRowState extends State<_SyncRow> {
                 constraints: const BoxConstraints(minWidth: 200),
                 child: Text(widget.s.table, style: ty.mono(size: 13.5, weight: FontWeight.w700)),
               ),
-              SizedBox(
-                width: 130,
-                child: CheckLine(tr('Structure'), key: ValueKey('table-structure-${widget.s.table}'), value: widget.s.structure, onChanged: (v) {
-                  setState(() => widget.s.structure = v);
+              TablePick(
+                key: ValueKey('table-pick-${widget.s.table}'),
+                structure: widget.s.structure,
+                data: widget.s.data,
+                onChanged: (s, d) {
+                  setState(() => widget.s
+                    ..structure = s
+                    ..data = d);
                   widget.onChanged();
-                }),
-              ),
-              SizedBox(
-                width: 130,
-                child: CheckLine(tr('Data'), key: ValueKey('table-data-${widget.s.table}'), value: widget.s.data, onChanged: (v) {
-                  setState(() => widget.s.data = v);
-                  widget.onChanged();
-                }),
+                },
               ),
             ]),
           ),

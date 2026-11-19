@@ -27,6 +27,7 @@ Future<String?> pickFile({String filter = 'All files (*.*)|*.*'}) => _run(
     '\$d = New-Object System.Windows.Forms.OpenFileDialog; \$d.Filter = ${_q(filter)}; '
     'if (\$d.ShowDialog() -eq "OK") { \$d.FileName }');
 
-Future<String?> pickSaveFile({required String name, String filter = 'JSON (*.json)|*.json'}) => _run(
+Future<String?> pickSaveFile({required String name, String filter = 'JSON (*.json)|*.json', String? title}) => _run(
     '\$d = New-Object System.Windows.Forms.SaveFileDialog; \$d.FileName = ${_q(name)}; \$d.Filter = ${_q(filter)}; '
+    '${title != null ? '\$d.Title = ${_q(title)}; ' : ''}'
     'if (\$d.ShowDialog() -eq "OK") { \$d.FileName }');
